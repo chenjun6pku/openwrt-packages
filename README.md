@@ -57,6 +57,7 @@ sysupgrade 时通常会保留；如果设备没有保留，重新执行安装脚
 | 包名 | 说明 |
 | --- | --- |
 | `feed-selftest` | 诊断包，用于验证源是否可访问、签名是否有效、安装是否成功 |
+| `minieap` | 802.1X 客户端，支持锐捷 RJv3 插件；源码在 [chenjun6pku/minieap](https://github.com/chenjun6pku/minieap) |
 
 ## 仓库结构
 
