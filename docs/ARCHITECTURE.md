@@ -46,8 +46,9 @@ vendor/<project>/         可选：多个包共享的上游源码
 ```
 
 OpenWrt 的 `scripts/feeds` 以 `SCAN_DEPTH=5` 扫描 feed，并只把包含
-`call BuildPackage` 的 `Makefile` 当作包。因此分类目录可以存在，包目录位于分类目录
-下一层即可。
+`call BuildPackage` 的 `Makefile` 当作包。因此包目录可以直接放在 `packages/` 下，
+不需要类型分类目录。当前仓库采用单层扁平结构，类型由 `luci-app-*`、`luci-theme-*`
+等包名表达；以后包数量增长时再引入功能分类即可，包名和 feed URL 不变。
 
 ### vendored 源码的扫描冲突
 
