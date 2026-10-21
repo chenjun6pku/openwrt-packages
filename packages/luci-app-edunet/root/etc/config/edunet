@@ -1,0 +1,22 @@
+config edunet 'general'
+        option enabled '0'
+        option username 'username'
+        option password 'password'
+        option level '1'
+        option nic 'wan'
+
+config schedule
+        option enabled '0'
+        option desc '1'
+        option hour '1'
+        option minute '1'
+        option weekday '1'
+        option action '0'
+
+config schedule
+        option enabled '0'
+        option desc '3'
+        option hour '3'
+        option minute '3'
+        option weekday '3'
+        option action '1'

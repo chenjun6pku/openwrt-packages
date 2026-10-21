@@ -1,0 +1,322 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:261
+msgid "Action"
+msgstr "操作"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:162
+msgid "Custom authentication field in hexadecimal format [Default: None]"
+msgstr "自定义十六进制认证字段 [默认：无]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:67
+msgid "Advanced Setting"
+msgstr "高级设置"
+
+#: applications/luci-app-edunet/root/usr/share/rpcd/acl.d/luci-app-edunet.json:3
+msgid "Allow access to EDUNET service and configuration"
+msgstr "Allow access to EDUNET service and configuration"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:115
+msgid "Auth Rounds"
+msgstr "认证次数"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:65
+msgid "Auth Setting"
+msgstr "认证设置"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:142
+msgid "Broadcast address for the Start packet [Default: Standard Address]"
+msgstr "Start 包广播地址 [默认：标准]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:62
+msgid "Client Configuration"
+msgstr "客户端设置"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:53
+msgid "Collecting data…"
+msgstr "正在获取运行状态..."
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:47
+msgid "Configure the EDUNET client for 802.1X authentication."
+msgstr "配置 802.1X 校园网络认证客户端。"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:161
+msgid "Custom Ruijie Option"
+msgstr "自定义认证字段"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:196
+msgid "Custom disk serial number [Default: auto-detect]"
+msgstr "自定义硬盘序列号 [默认：自动获取]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:184
+msgid "Custom primary DNS address (IPv4) [Default: auto-detect]"
+msgstr "自定义主 DNS 地址（IPV4） [默认：自动获取]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:173
+msgid "Custom ruijie client version string [Default: RG-SU For Linux V1.0]"
+msgstr "自定义锐捷客户端版本 [默认：RG-SU For Linux V1.0]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:190
+msgid "Custom secondary DNS address (IPv4 / IPv6) [Default: auto-detect]"
+msgstr "自定义次 DNS 地址（IPv4 / IPv6） [默认：自动获取]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:166
+msgid "Custom service name for authentication [Default: internet]"
+msgstr "自定义认证服务名称 [默认：internet]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:153
+msgid "DHCP After Auth"
+msgstr "认证后"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:152
+msgid "DHCP Before Auth"
+msgstr "认证前"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:157
+msgid "DHCP Script"
+msgstr "DHCP 脚本"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:148
+msgid "DHCP Type"
+msgstr "DHCP 模式"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:149
+msgid "DHCP mode: [Default: DHCP After Auth]"
+msgstr "DHCP 模式 [默认：认证后]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:248
+msgid "Define on which days the schedule runs, use '*' for everday, '1-5' for a range, '1,3,5' for a list"
+msgstr "选择计划任务在哪些天运行，使用'*'表示每天，'1-5'表示范围，'1，3，5'表示列表"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:220
+msgid "Description"
+msgstr "描述"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:109
+msgid "Do not allow automatic reconnection after disconnection [Default: True]"
+msgstr "掉线后禁止自动重新认证 [默认：是]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:141
+msgid "EAP Broadcast Address"
+msgstr "Start 包广播地址"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:29
+#: applications/luci-app-edunet/root/usr/share/luci/menu.d/luci-app-edunet.json:3
+msgid "EDUNET"
+msgstr "EDUNET"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:46
+msgid "EDUNET Client"
+msgstr "EDUNET 客户端"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:70
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:214
+msgid "Enable"
+msgstr "启用"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:221
+msgid "Enter a short description for the schedule"
+msgstr "对此计划任务进行简短描述"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:226
+msgid "Enter the hour for the schedule (Range: 0-23)"
+msgstr "请输入此计划任务的小时（范围: 0-23）"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:237
+msgid "Enter the minute for the schedule (Range: 0-59)"
+msgstr "请输入此计划任务的分钟（范围: 0-59）"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:285
+msgid "Error:"
+msgstr "错误："
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:195
+msgid "Fake Disk Serial"
+msgstr "虚拟硬盘序列号"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:183
+msgid "Fake Primary DNS"
+msgstr "主 DNS 地址"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:189
+msgid "Fake Secondary DNS"
+msgstr "次 DNS 地址"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:110
+msgid "False"
+msgstr "否"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:66
+msgid "General Setting"
+msgstr "通用设置"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:134
+msgid "Heartbeat Interval"
+msgstr "心跳间隔"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:135
+msgid "Heartbeat interval in seconds [Default: 60]"
+msgstr "发送心跳包的时间间隔（秒） [默认：60]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:225
+msgid "Hour"
+msgstr "小时"
+
+#: applications/luci-app-edunet/root/usr/share/luci/menu.d/luci-app-edunet.json:18
+msgid "Log"
+msgstr "Log"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:177
+msgid "Max DHCP Count"
+msgstr "最大 DHCP 次数"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:102
+msgid "Max Failures"
+msgstr "最大认证失败次数"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:121
+msgid "Max Retries"
+msgstr "最大超时重试次数"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:178
+msgid "Max timeout count for waiting for DHCP result during re-authentication [Default: 3]"
+msgstr "二次认证时等待 DHCP 结果的允许超时次数 [默认：3]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:103
+msgid "Maximum number of allowed authentication failures [Default: 3]"
+msgstr "最大允许认证失败次数 [默认：3]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:122
+msgid "Maximum number of timeout retries [Default: 3]"
+msgstr "最大超时重试的次数 [默认：3]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:236
+msgid "Minute"
+msgstr "分钟"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:35
+msgid "NOT RUNNING"
+msgstr "未运行"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:87
+msgid "Network Interface"
+msgstr "网络接口"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:128
+msgid "Network Module"
+msgstr "网络模块"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:108
+msgid "No Auto Reauth"
+msgstr "禁止自动重新认证"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:150
+msgid "No DHCP"
+msgstr "不运行 DHCP"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:116
+msgid "Number of authentication rounds required [Default: 1]"
+msgstr "需要认证的次数 [默认：1]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:82
+msgid "Password"
+msgstr "密码"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:256
+msgid "Please enter the correct format"
+msgstr "请输入正确的格式"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:34
+msgid "RUNNING"
+msgstr "运行中"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:144
+msgid "Ruijie Private Address"
+msgstr "锐捷私有地址"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:211
+msgid "Schedule Configuration"
+msgstr "计划任务配置"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:68
+msgid "Schedule Setting"
+msgstr "计划任务"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:158
+msgid "Script to run during re-authentication or after auth completion [Default: None]"
+msgstr "二次认证之间及认证完成后运行此命令 [默认：无]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:151
+msgid "Secondary Auth"
+msgstr "二次认证"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:262
+msgid "Select an action for this scheduled task"
+msgstr "选择当前计划任务的操作"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:129
+msgid "Selects a network module for send and receive packages [Default: sockraw]"
+msgstr "用于发送和接收数据包的网络模块 [默认：sockraw]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:165
+msgid "Service Name"
+msgstr "认证服务名称"
+
+#: applications/luci-app-edunet/root/usr/share/luci/menu.d/luci-app-edunet.json:10
+msgid "Setting"
+msgstr "设置"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:90
+msgid "Stage Timeout"
+msgstr "单个认证时间"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:143
+msgid "Standard Address"
+msgstr "标准地址"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:265
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:270
+msgid "Start"
+msgstr "启动"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:264
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:269
+msgid "Stop"
+msgstr "停止"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:91
+msgid "Timeout for a single authentication stage [Default: 5]"
+msgstr "单个认证阶段的超时时间 [默认：5]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:111
+msgid "True"
+msgstr "是"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/log.js:29
+msgid "Unable to load log data:"
+msgstr "无法加载日志内容："
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:77
+msgid "Username"
+msgstr "用户名"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:172
+msgid "Version String"
+msgstr "锐捷客户端版本"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:96
+msgid "Wait After Fail"
+msgstr "失败后等待"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:97
+msgid "Waiting time before re-authentication after a failure [Default: 30]"
+msgstr "认证失败后重新认证前的等待时间 [默认：30]"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:247
+msgid "Weekday"
+msgstr "星期"
+
+#: applications/luci-app-edunet/htdocs/luci-static/resources/view/edunet/edunet.js:130
+msgid "sockraw"
+msgstr "sockraw"

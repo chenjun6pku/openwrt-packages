@@ -1,0 +1,34 @@
+{
+    "luci-app-minieap": {
+        "description": "Allow access to EDUNET service and configuration",
+        "read": {
+            "uci": [
+                "edunet"
+            ],
+            "ubus": {
+                "service": [
+                    "list"
+                ]
+            },
+            "file": {
+                "/sbin/logread": [
+                    "stat"
+                ],
+                "/sbin/logread -e ^": [
+                    "exec"
+                ],
+                "/usr/sbin/logread": [
+                    "stat"
+                ],
+                "/usr/sbin/logread -e ^": [
+                    "exec"
+                ]
+            }
+        },
+        "write": {
+            "uci": [
+                "edunet"
+            ]
+        }
+    }
+}

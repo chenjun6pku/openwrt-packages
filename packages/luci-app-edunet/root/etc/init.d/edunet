@@ -1,0 +1,126 @@
+#!/bin/sh /etc/rc.common
+
+USE_PROCD=1
+START=99
+STOP=10
+
+PROG=/usr/sbin/minieap
+SERVICE_NAME=minieap
+CONFIG_FILE=edunet
+ACTIVE_FILE="/tmp/edunet.active"
+CRON_COMMENT="# edunet_schedule"
+CRON_START="/etc/init.d/edunet start"
+CRON_STOP="/etc/init.d/edunet stop"
+
+log_message() {
+    logger -p daemon.info -t "${SERVICE_NAME}[$$]" "[$(date '+%Y/%m/%d %H:%M:%S')][I] [PROCD] $1"
+}
+add_cron_job() {
+    local section="$1"
+    local enabled hour minute weekday action_val action_cmd
+    config_get_bool enabled "$section" 'enabled' 0
+    [ "$enabled" -eq 0 ] && return
+    config_get hour "$section" 'hour' '0'
+    config_get minute "$section" 'minute' '0'
+    config_get weekday "$section" 'weekday' '*'
+    config_get action_val "$section" 'action' '0'
+    config_get desc "$section" 'desc' 'N/A'
+    [ "$action_val" = "0" ] && action_cmd=$CRON_STOP || action_cmd=$CRON_START
+    (crontab -l; echo "$minute $hour * * $weekday $action_cmd $CRON_COMMENT") | crontab -
+    log_message "Added cron job: '$desc' ($minute $hour * * $weekday $action_cmd)"
+}
+sync_cron() {
+    log_message "Syncing cron jobs from UCI configuration..."
+    config_load "$CONFIG_FILE"
+    crontab -l | grep -v "$CRON_COMMENT" | crontab -
+    local general_enabled
+    config_get_bool general_enabled "general" 'enabled' 0
+    [ "$general_enabled" -eq 0 ] && return
+    config_foreach add_cron_job schedule
+    log_message "Cron sync complete."
+}
+
+start_service() {
+    local enabled
+    config_load "$CONFIG_FILE"
+    config_get_bool enabled "general" 'enabled' 0
+
+    if [ "$enabled" -eq 0 ] || [ ! -f "$ACTIVE_FILE" ]; then
+        echo "[START_SERVICE]: edunet is not allow running" >> "$ACTIVE_FILE"
+        log_message "START: Service is not allow to start"
+        return 0
+    fi
+    log_message "START: Preparing to start minieap process"
+    local username password nic level stage_timeout wait_after_fail max_fail no_auto_reauth auth_round max_retries
+    local if_impl heartbeat eap_bcast_addr dhcp_type dhcp_script version_str max_dhcp_count fake_dns1 fake_dns2 fake_serial 
+
+    config_get username  "general" 'username'
+    config_get password  "general" 'password'
+    config_get nic "general" 'nic' 'wan'
+    config_get stage_timeout "general" 'stage_timeout' ''
+    config_get wait_after_fail "general" 'wait_after_fail' ''
+    config_get max_fail "general" 'max_fail' ''
+    config_get_bool no_auto_reauth "general" 'no_auto_reauth' 1
+    config_get auth_round "general" 'auth_round' ''
+    config_get max_retries "general" 'max_retries' ''
+    config_get if_impl "general" 'if_impl' 'sockraw'
+    config_get heartbeat "general" 'heartbeat' ''
+    config_get eap_bcast_addr "general" 'eap_bcast_addr' '0'
+    config_get dhcp_type "general" 'dhcp_type' '2'
+    config_get dhcp_script "general" 'dhcp_script' ''
+    config_get service "general" 'service' ''
+    config_get version_str "general" 'version_str' ''
+    config_get max_dhcp_count "general" 'max_dhcp_count' ''
+    config_get fake_dns1 "general" 'fake_dns1' ''
+    config_get fake_dns2 "general" 'fake_dns2' ''
+    config_get fake_serial "general" 'fake_serial' ''
+
+    procd_open_instance edunet
+    procd_set_param command "$PROG"
+    procd_append_param command --username "$username"
+    procd_append_param command --password "$password"
+    procd_append_param command --nic "$nic"
+    procd_append_param command --daemonize "0"
+    procd_append_param command --module "rjv3"
+    procd_append_param command --service "$(printf '\xd3\xd0\xcf\xdf\x31\x78\xc9\xcf\xcd\xf8')"
+    [ "$no_auto_reauth" -eq 1 ] && procd_append_param command --no-auto-reauth
+    [ -n "$stage_timeout" ] && procd_append_param command --stage-timeout "$stage_timeout"
+    [ -n "$wait_after_fail" ] && procd_append_param command --wait-after-fail "$wait_after_fail"
+    [ -n "$max_fail" ] && procd_append_param command --max-fail "$max_fail"
+    [ -n "$auth_round" ] && procd_append_param command --auth-round, "$auth_round"
+    [ -n "$max_retries" ] && procd_append_param command --max-retries "$max_retries"
+    procd_append_param command --if-impl "$if_impl"
+    [ -n "$heartbeat" ] && procd_append_param command --heartbeat "$heartbeat"
+    procd_append_param command --eap-bcast-addr "$eap_bcast_addr"
+    procd_append_param command --dhcp-type "$dhcp_type"
+    [ -n "$dhcp_script" ] && procd_append_param command --dhcp-script "$dhcp_script"
+    # [ -n "$service" ] && procd_append_param command --service "$(printf '%s' $service | iconv -f UTF-8 -t GBK)"
+    [ -n "$version_str" ] && procd_append_param command --version-str "$version_str"
+    [ -n "$max_dhcp_count" ] && procd_append_param command --max-dhcp-count "$max_dhcp_count"
+    [ -n "$fake_dns1" ] && procd_append_param command --fake-dns1 "$fake_dns1"
+    [ -n "$fake_dns2" ] && procd_append_param command --fake-dns2 "$fake_dns2"
+    [ -n "$fake_serial" ] && procd_append_param command --fake-serial "$fake_serial"
+
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_close_instance
+    log_message "START: Procd instance for minieap created and started"
+}
+stop_service() {
+    log_message "STOP: Service instance is being stopped by procd"
+}
+reload_service() {
+    log_message "RELOAD: Reload triggered"
+    stop
+    sync_cron
+    start
+}
+boot(){
+    log_message "BOOT: Device boot detected, running boot-time tasks"
+    crontab -l | grep -v "$CRON_COMMENT" | crontab -
+    start
+}
+service_triggers() {
+    log_message "TRIGGERS: Setting up UCI reload trigger"
+    procd_add_reload_trigger "$CONFIG_FILE"
+}
