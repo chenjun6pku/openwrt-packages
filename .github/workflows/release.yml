@@ -33,11 +33,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: List packages
+        id: packages
+        run: echo "list=$(./scripts/list-packages.sh | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+
       - name: Build packages
         uses: openwrt/gh-action-sdk@v11
         env:
           ARCH: ${{ matrix.arch }}-openwrt-25.12
           FEEDNAME: custom
+          PACKAGES: ${{ steps.packages.outputs.list }}
           INDEX: "0"
           NO_REFRESH_CHECK: "true"
 
