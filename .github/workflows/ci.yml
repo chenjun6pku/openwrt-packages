@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build x86_64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build packages
+        uses: openwrt/gh-action-sdk@v11
+        env:
+          ARCH: x86_64-openwrt-25.12
+          FEEDNAME: custom
+          INDEX: "0"
+          NO_REFRESH_CHECK: "true"
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-${{ github.run_id }}
+          path: |
+            bin/packages/x86_64/custom
+            logs
+          if-no-files-found: warn
+          retention-days: 7

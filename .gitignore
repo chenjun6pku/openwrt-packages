@@ -1,0 +1,23 @@
+# Build outputs
+bin/
+build_dir/
+dl/
+logs/
+tmp/
+public/
+verify-keys/
+signed/
+*.apk
+*.ipk
+packages.adb
+packages.json
+
+# Secrets
+private-key.pem
+keys/private-key.pem
+*.key
+.env
+
+# Editor / OS
+.DS_Store
+*.swp

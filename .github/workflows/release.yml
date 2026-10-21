@@ -1,0 +1,172 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - 'packages/**'
+      - 'luci/**'
+      - 'themes/**'
+      - 'scripts/**'
+      - 'keys/**'
+      - 'site/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64_cortex-a53, mipsel_24kc]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build packages
+        uses: openwrt/gh-action-sdk@v11
+        env:
+          ARCH: ${{ matrix.arch }}-openwrt-25.12
+          FEEDNAME: custom
+          INDEX: "0"
+          NO_REFRESH_CHECK: "true"
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: apk-${{ matrix.arch }}
+          path: bin/packages/${{ matrix.arch }}/custom
+          if-no-files-found: error
+          retention-days: 7
+
+  sign:
+    name: sign package indices
+    needs: build
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          pattern: apk-*
+          path: artifacts
+          merge-multiple: false
+
+      - name: Sign indices
+        env:
+          APK_PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "${APK_PRIVATE_KEY:-}" || {
+            echo "APK_PRIVATE_KEY is not set" >&2
+            exit 1
+          }
+
+          umask 077
+          printf '%s\n' "$APK_PRIVATE_KEY" > private-key.pem
+          trap 'rm -f private-key.pem' EXIT
+
+          mkdir -p signed verify-keys
+          cp keys/public-key.pem verify-keys/openwrt-packages.pem
+          for d in artifacts/apk-*; do
+            arch="${d#artifacts/apk-}"
+            cp -a "$d" "signed/$arch"
+          done
+
+          # One SDK is enough: apk mkndx only reads the .apk metadata.
+          # --user 0 avoids UID mismatches when reading the 0600 key.
+          docker run --rm --user 0 \
+            -v "$PWD/signed:/signed" \
+            -v "$PWD/private-key.pem:/private-key.pem:ro" \
+            -v "$PWD/verify-keys:/keys:ro" \
+            --entrypoint /bin/bash \
+            openwrt/sdk:x86_64-openwrt-25.12 \
+            -c '
+              set -e
+              mkdir -p /sdk
+              cd /sdk
+              VERSION_PATH=releases/25.12.0 \
+              FILE_HOST=https://downloads.openwrt.org \
+                bash /builder/setup.sh
+
+              for d in /signed/*; do
+                echo "Signing $d"
+                cd "$d"
+                /sdk/staging_dir/host/bin/apk mkndx \
+                  --root /sdk \
+                  --keys-dir /sdk \
+                  --allow-untrusted \
+                  --sign /private-key.pem \
+                  --output packages.adb \
+                  *.apk
+                /sdk/staging_dir/host/bin/apk adbdump packages.adb >/dev/null
+                /sdk/staging_dir/host/bin/apk verify \
+                  --keys-dir /keys packages.adb
+              done
+            '
+
+      - name: Upload signed feed
+        uses: actions/upload-artifact@v7
+        with:
+          name: signed
+          path: signed
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: deploy pages
+    needs: sign
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download signed feed
+        uses: actions/download-artifact@v8
+        with:
+          name: signed
+          path: signed
+
+      - name: Assemble site
+        run: |
+          set -e
+          mkdir -p public/25.12
+          for d in signed/*; do
+            arch="$(basename "$d")"
+            mkdir -p "public/25.12/$arch"
+            cp -a "$d" "public/25.12/$arch/custom"
+          done
+          cp keys/public-key.pem public/public-key.pem
+          cp scripts/install-feed.sh public/install-feed.sh
+          cp site/index.html public/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

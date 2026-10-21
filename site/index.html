@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenWrt Packages Feed</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      max-width: 52rem;
+      margin: 3rem auto;
+      padding: 0 1.25rem;
+      font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    pre { padding: 1rem; overflow-x: auto; border-radius: .5rem; background: #8881; }
+    h1 { margin-bottom: .25rem; }
+    .muted { opacity: .7; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #8884; }
+  </style>
+</head>
+<body>
+  <h1>OpenWrt Packages Feed</h1>
+  <p class="muted">OpenWrt 25.12.x · apk v3 · signed feed</p>
+
+  <h2>安装</h2>
+  <pre><code>uclient-fetch -O /tmp/install-feed.sh \
+  https://chenjun6pku.github.io/openwrt-packages/install-feed.sh
+sh /tmp/install-feed.sh
+apk add &lt;package&gt;</code></pre>
+
+  <h2>架构</h2>
+  <table>
+    <tr><th>DISTRIB_ARCH</th><th>Feed URL</th></tr>
+    <tr><td>x86_64</td><td><code>/25.12/x86_64/custom/packages.adb</code></td></tr>
+    <tr><td>aarch64_cortex-a53</td><td><code>/25.12/aarch64_cortex-a53/custom/packages.adb</code></td></tr>
+    <tr><td>mipsel_24kc</td><td><code>/25.12/mipsel_24kc/custom/packages.adb</code></td></tr>
+  </table>
+
+  <h2>签名公钥</h2>
+  <p><a href="public-key.pem">public-key.pem</a></p>
+</body>
+</html>

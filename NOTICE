@@ -1,0 +1,6 @@
+The MIT license in LICENSE applies to the build scripts, CI configuration,
+documentation, and the feed-selftest package authored in this repository.
+
+Each package under packages/, luci/, and themes/ retains the license of its
+upstream project. See the package directory, its UPSTREAM.md, and its license
+files for the applicable terms. Vendoring a package here does not relicense it.

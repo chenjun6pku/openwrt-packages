@@ -1,0 +1,9 @@
+#!/bin/sh
+
+[ -r /etc/openwrt_release ] && . /etc/openwrt_release
+
+echo "openwrt-packages feed self-test"
+echo "package: feed-selftest 1.0.0-1"
+echo "release: ${DISTRIB_RELEASE:-unknown}"
+echo "arch: ${DISTRIB_ARCH:-unknown}"
+echo "feed: https://chenjun6pku.github.io/openwrt-packages"
