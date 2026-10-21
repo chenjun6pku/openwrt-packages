@@ -14,22 +14,50 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - name: List packages
-        id: packages
-        run: echo "list=$(./scripts/list-packages.sh | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - name: Detect changed packages
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -e
+          force_all=0
+          if [ -z "$BASE_SHA" ] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            force_all=1
+          elif git diff --name-only "$BASE_SHA"...HEAD -- \
+              .github/workflows/ci.yml \
+              .github/scripts/changed-packages.sh \
+              scripts/list-packages.sh | grep -q .; then
+            force_all=1
+          fi
+
+          if [ "$force_all" -eq 1 ]; then
+            list="$(./scripts/list-packages.sh | tr '\n' ' ')"
+          else
+            list="$(./.github/scripts/changed-packages.sh "$BASE_SHA" HEAD | tr '\n' ' ')"
+          fi
+
+          echo "list=$list" >> "$GITHUB_OUTPUT"
+          if [ -n "$list" ]; then
+            echo "has=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "has=0" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build packages
+        if: steps.changed.outputs.has == '1'
         uses: openwrt/gh-action-sdk@v11
         env:
           ARCH: x86_64-openwrt-25.12
           FEEDNAME: custom
-          PACKAGES: ${{ steps.packages.outputs.list }}
+          PACKAGES: ${{ steps.changed.outputs.list }}
           INDEX: "0"
           NO_REFRESH_CHECK: "true"
 
       - name: Upload build artifacts
-        if: always()
+        if: always() && steps.changed.outputs.has == '1'
         uses: actions/upload-artifact@v7
         with:
           name: ci-${{ github.run_id }}

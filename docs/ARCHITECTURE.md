@@ -68,7 +68,8 @@ OpenWrt 的 `scripts/feeds` 以 `SCAN_DEPTH=5` 扫描 feed，并只把包含
 
 ```text
 PR:
-  build (x86_64) ──> 编译全部包，不生成索引，不接触密钥
+  build (x86_64) ──> 只编译变更包，不生成索引，不接触密钥
+                      修改 CI/自动发现脚本时全量验证
 
 push main / tag:
   build (x86_64, aarch64_cortex-a53, mipsel_24kc)

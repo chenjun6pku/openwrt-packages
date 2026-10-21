@@ -148,6 +148,6 @@ make package/myplugin/compile V=s
 
 ## 6. PR 与发布
 
-- PR 会在 x86_64 上编译全部包；
-- 合并到 `main` 或打 `v*` tag 后，release workflow 会在三个架构上构建、签名并发布；
+- PR 只在 x86_64 上编译变更包（修改 CI/自动发现脚本时全量验证）；
+- 合并到 `main` 或打 `v*` tag 后，release workflow 仍会在三个架构上全量构建、签名并发布；
 - 发布后可用 `apk add <package>` 在设备上验证。
