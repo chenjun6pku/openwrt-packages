@@ -95,7 +95,7 @@ make package/myplugin/compile V=s
 
 CI 规则：
 
-- Pull Request：在 `x86_64` 上编译全部包，不使用签名密钥；
+- Pull Request：只在 `x86_64` 上编译变更包（修改 CI/自动发现脚本时全量验证），不使用签名密钥；
 - push 到 `main` / 打 `v*` tag：三个架构构建 → 独立签名 job → 部署 Pages。
 
 ## 签名
