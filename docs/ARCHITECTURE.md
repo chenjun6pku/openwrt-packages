@@ -41,9 +41,8 @@
 ## 目录布局
 
 ```text
-packages/<name>/         普通包
-luci/luci-app-<name>/    LuCI 应用
-themes/luci-theme-<name>/ LuCI 主题
+packages/<name>/          所有包（普通插件、luci-app-*、luci-theme-*）
+vendor/<project>/         可选：多个包共享的上游源码
 ```
 
 OpenWrt 的 `scripts/feeds` 以 `SCAN_DEPTH=5` 扫描 feed，并只把包含
@@ -55,7 +54,8 @@ OpenWrt 的 `scripts/feeds` 以 `SCAN_DEPTH=5` 扫描 feed，并只把包含
 如果把一个“本身是 OpenWrt 包”的上游目录整体放进另一个包的 `src/`，其 `Makefile`
 含有 `call BuildPackage`，会被扫描成第二个包。处理方式：
 
-- LuCI app/主题：上游包目录本身就是我们的包目录，放在 `luci/` 或 `themes/` 下；
+- LuCI app/主题：上游包目录本身就是我们的包目录，放在 `packages/luci-app-*` 或
+  `packages/luci-theme-*` 下；
 - 通用项目：源码放 `src/`，包根目录放我们的 Makefile；`src/` 内若出现 OpenWrt
   Makefile，重命名为 `Makefile.upstream`；
 - 一个上游仓库含多个包：在 `vendor/<project>/` 放一份源码，各包 Makefile 引用它；

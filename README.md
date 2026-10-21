@@ -61,9 +61,8 @@ sysupgrade 时通常会保留；如果设备没有保留，重新执行安装脚
 ## 仓库结构
 
 ```text
-packages/       普通插件，每个目录一个 OpenWrt 包
-luci/           LuCI 应用（luci-app-*）
-themes/         LuCI 主题（luci-theme-*）
+packages/       所有包，每个目录一个 OpenWrt 包（普通插件、luci-app-*、luci-theme-*）
+vendor/         可选：多个包共享的上游源码
 scripts/        设备安装脚本、源码固化脚本
 keys/           只存放公钥
 docs/           架构与新增包说明
@@ -117,5 +116,5 @@ feed 使用 EC P-256 私钥签名索引。私钥只保存在 GitHub Actions secr
 
 ## 许可
 
-构建脚本、CI 配置、文档和 `feed-selftest` 使用 MIT 许可证。`packages/`、`luci/`、
-`themes/` 下的第三方包保留其上游许可证；详见各包的 `UPSTREAM.md` 和许可证文件。
+构建脚本、CI 配置、文档和 `feed-selftest` 使用 MIT 许可证。`packages/` 下的第三方包
+保留其上游许可证；详见各包的 `UPSTREAM.md` 和许可证文件。

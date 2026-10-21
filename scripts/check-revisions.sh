@@ -15,7 +15,7 @@ if [ -z "$base" ]; then
 	exit 0
 fi
 
-changed="$(git diff --name-only "$base"...HEAD -- packages luci themes |
+changed="$(git diff --name-only "$base"...HEAD -- packages |
 	awk -F/ 'NF >= 2 { print $1 "/" $2 }' | sort -u)"
 
 [ -n "$changed" ] || {

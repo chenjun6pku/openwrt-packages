@@ -5,8 +5,10 @@
 | 类型 | 目录 | 示例 |
 | --- | --- | --- |
 | 普通插件 | `packages/<name>/` | `packages/nikki/` |
-| LuCI 应用 | `luci/luci-app-<name>/` | `luci/luci-app-nikki/` |
-| LuCI 主题 | `themes/luci-theme-<name>/` | `themes/luci-theme-argon/` |
+| LuCI 应用 | `packages/luci-app-<name>/` | `packages/luci-app-nikki/` |
+| LuCI 主题 | `packages/luci-theme-<name>/` | `packages/luci-theme-argon/` |
+
+所有包都在 `packages/` 下平面存放，类型由包名表达，不再使用额外的分类目录。
 
 包目录名通常与 `PKG_NAME` 一致。
 
@@ -27,7 +29,7 @@
 ./scripts/vendor-upstream.sh \
   https://github.com/owner/luci-app-example.git \
   <commit-or-tag> \
-  luci/luci-app-example
+  packages/luci-app-example
 ```
 
 然后补全 `UPSTREAM.md` 中的 `License` 和 `Local changes`。

@@ -2,7 +2,7 @@
 set -eu
 
 found=""
-for dir in packages/* luci/* themes/*; do
+for dir in packages/*; do
 	[ -f "$dir/Makefile" ] || continue
 
 	names="$(sed -n 's/^PKG_NAME:=//p' "$dir/Makefile")"

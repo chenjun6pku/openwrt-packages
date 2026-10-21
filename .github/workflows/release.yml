@@ -6,8 +6,7 @@ on:
     tags: ['v*']
     paths:
       - 'packages/**'
-      - 'luci/**'
-      - 'themes/**'
+      - 'vendor/**'
       - 'scripts/**'
       - 'keys/**'
       - 'site/**'
