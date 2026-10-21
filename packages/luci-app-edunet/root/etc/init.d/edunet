@@ -25,8 +25,25 @@ add_cron_job() {
     config_get weekday "$section" 'weekday' '*'
     config_get action_val "$section" 'action' '0'
     config_get desc "$section" 'desc' 'N/A'
+
+    case "$hour" in
+        ''|*[!0-9]*) log_message "Invalid schedule hour: '$hour'"; return ;;
+    esac
+    case "$minute" in
+        ''|*[!0-9]*) log_message "Invalid schedule minute: '$minute'"; return ;;
+    esac
+    [ "$hour" -le 23 ] || { log_message "Invalid schedule hour: '$hour'"; return; }
+    [ "$minute" -le 59 ] || { log_message "Invalid schedule minute: '$minute'"; return; }
+    case "$weekday" in
+        ''|*[!0-9*,-]*) log_message "Invalid schedule weekday: '$weekday'"; return ;;
+    esac
+    printf '%s\n' "$weekday" | grep -Eq '^(\*|([1-7](-[1-7])?)(,[1-7](-[1-7])?)*)$' || {
+        log_message "Invalid schedule weekday: '$weekday'"
+        return
+    }
+
     [ "$action_val" = "0" ] && action_cmd=$CRON_STOP || action_cmd=$CRON_START
-    (crontab -l; echo "$minute $hour * * $weekday $action_cmd $CRON_COMMENT") | crontab -
+    (crontab -l 2>/dev/null; printf '%s %s * * %s %s %s\n' "$minute" "$hour" "$weekday" "$action_cmd" "$CRON_COMMENT") | crontab -
     log_message "Added cron job: '$desc' ($minute $hour * * $weekday $action_cmd)"
 }
 sync_cron() {
@@ -87,7 +104,7 @@ start_service() {
     [ -n "$stage_timeout" ] && procd_append_param command --stage-timeout "$stage_timeout"
     [ -n "$wait_after_fail" ] && procd_append_param command --wait-after-fail "$wait_after_fail"
     [ -n "$max_fail" ] && procd_append_param command --max-fail "$max_fail"
-    [ -n "$auth_round" ] && procd_append_param command --auth-round, "$auth_round"
+    [ -n "$auth_round" ] && procd_append_param command --auth-round "$auth_round"
     [ -n "$max_retries" ] && procd_append_param command --max-retries "$max_retries"
     procd_append_param command --if-impl "$if_impl"
     [ -n "$heartbeat" ] && procd_append_param command --heartbeat "$heartbeat"
