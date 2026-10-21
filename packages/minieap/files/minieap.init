@@ -1,0 +1,40 @@
+#!/bin/sh /etc/rc.common
+
+START=90
+STOP=10
+USE_PROCD=1
+
+start_service() {
+	[ -f /etc/minieap.conf ] || {
+		logger -t minieap "missing /etc/minieap.conf"
+		return 1
+	}
+
+	. /etc/minieap.conf
+
+	[ -n "${username:-}" ] || {
+		logger -t minieap "username is not set"
+		return 1
+	}
+	[ -n "${password:-}" ] || {
+		logger -t minieap "password is not set"
+		return 1
+	}
+	[ -n "${nic:-}" ] || {
+		logger -t minieap "nic is not set"
+		return 1
+	}
+
+	set -- /usr/sbin/minieap -u "$username" -p "$password" -n "$nic"
+	for m in ${module:-}; do
+		set -- "$@" --module "$m"
+	done
+	[ -n "${if_impl:-}" ] && set -- "$@" --if-impl "$if_impl"
+
+	procd_open_instance
+	procd_set_param command "$@"
+	procd_set_param respawn
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}
