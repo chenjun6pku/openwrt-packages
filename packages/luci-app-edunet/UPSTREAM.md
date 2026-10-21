@@ -9,7 +9,9 @@
   - added `+luci-base` to `LUCI_DEPENDS` in the package Makefile;
   - fixed the `--auth-round` option spelling in the init script;
   - added validation for cron hour/minute/weekday values and switched to
-    `printf` when writing the crontab line (security hardening).
+    `printf` when writing the crontab line (security hardening);
+  - made `root/etc/init.d/edunet` executable (0755) so the init script can
+    be enabled and started.
 
 The LuCI JS view, UCI config, ACL, and menu files are otherwise unchanged
 from the pinned commit.
