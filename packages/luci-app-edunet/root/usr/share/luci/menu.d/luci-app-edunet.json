@@ -1,0 +1,25 @@
+{
+	"admin/services/edunet": {
+		"title": "EDUNET",
+		"order": 50,
+		"action": {
+			"type": "firstchild"
+		}
+	},
+	"admin/services/edunet/setting": {
+		"title": "Setting",
+		"order": 10,
+		"action": {
+			"type": "view",
+			"path": "edunet/edunet"
+		}
+	},
+	"admin/services/edunet/log": {
+		"title": "Log",
+		"order": 20,
+		"action": {
+			"type": "view",
+			"path": "edunet/log"
+		}
+	}
+}
