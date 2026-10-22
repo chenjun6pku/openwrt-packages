@@ -52,7 +52,7 @@ LUCI_DEPENDS:=+luci-base
 LUCI_PKGARCH:=all
 ```
 
-Lua 应用还需要 `luci-compat`（以及运行时的 `luci-lua-runtime`），但 25.12 已弃用
+Lua 应用还需要 `luci-compat`（以及运行时的 `luci-lua-runtime`），但 25.12.6 已弃用
 Lua，能改 JS 的优先改 JS。
 
 ### B. 上游已经是 OpenWrt 包，但源码是下载的
@@ -122,10 +122,10 @@ $(eval $(call BuildPackage,myplugin))
 
 ## 4. 本地编译
 
-需要先准备对应架构的 OpenWrt 25.12 SDK。以 x86_64 为例：
+需要先准备对应架构的 OpenWrt 25.12.6 SDK。以 x86_64 为例：
 
 ```sh
-cd /path/to/openwrt-sdk-25.12.0-x86-64
+cd /path/to/openwrt-sdk-25.12.6-x86-64
 echo "src-link custom /path/to/openwrt-packages" >> feeds.conf
 ./scripts/feeds update custom
 ./scripts/feeds install -p custom -f -a

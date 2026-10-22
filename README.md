@@ -1,6 +1,6 @@
 # OpenWrt Packages Feed
 
-一个面向 **OpenWrt 25.12.x / apk v3** 的第三方软件源，包含收集并固化在仓库中的
+一个面向 **OpenWrt 25.12.6 / apk v3** 的第三方软件源，包含收集并固化在仓库中的
 OpenWrt 插件、LuCI 应用和 LuCI 主题。CI 使用官方 OpenWrt SDK 为每个支持的架构
 编译 `.apk`，签名索引后发布到 GitHub Pages。
 
@@ -8,7 +8,7 @@ OpenWrt 插件、LuCI 应用和 LuCI 主题。CI 使用官方 OpenWrt SDK 为每
 
 | 项目 | 范围 |
 | --- | --- |
-| OpenWrt | 25.12.x（不包含 24.10/opkg、SNAPSHOT） |
+| OpenWrt | 25.12.6（仅此版本；不包含 24.10/opkg、SNAPSHOT） |
 | 架构 | `x86_64`、`aarch64_cortex-a53`、`mipsel_24kc` |
 | 包类型 | 用户态插件、LuCI app、LuCI 主题 |
 | 内核模块 | 不支持（kmod 与 target/内核版本绑定） |
@@ -25,7 +25,7 @@ sh /tmp/install-feed.sh
 
 脚本会：
 
-1. 检查发行版是否为 25.12.x；
+1. 检查发行版是否为 25.12.6；
 2. 检查 `DISTRIB_ARCH` 是否受支持；
 3. 把公钥安装到 `/etc/apk/keys/openwrt-packages.pem`；
 4. 把 feed 写入 `/etc/apk/repositories.d/customfeeds.list`；
@@ -44,7 +44,7 @@ BASE="https://chenjun6pku.github.io/openwrt-packages"
 ARCH="$(. /etc/openwrt_release; echo "$DISTRIB_ARCH")"
 
 uclient-fetch -O /etc/apk/keys/openwrt-packages.pem "$BASE/public-key.pem"
-echo "$BASE/25.12/$ARCH/custom/packages.adb" \
+echo "$BASE/25.12.6/$ARCH/custom/packages.adb" \
   >> /etc/apk/repositories.d/customfeeds.list
 apk update
 ```
@@ -84,7 +84,7 @@ LuCI 包文件；来源、commit 和许可证记录在 `UPSTREAM.md` 中。
 
 # 2. 编写/调整 Makefile，补 UPSTREAM.md
 
-# 3. 本地用 SDK 编译（需要已解压的 OpenWrt 25.12 SDK）
+# 3. 本地用 SDK 编译（需要已解压的 OpenWrt 25.12.6 SDK）
 cd /path/to/sdk
 echo "src-link custom $PWD/../openwrt-packages" >> feeds.conf
 ./scripts/feeds update custom
