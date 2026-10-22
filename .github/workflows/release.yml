@@ -90,7 +90,9 @@ jobs:
             cp -a "$d" "signed/$arch"
           done
 
-          # One SDK is enough: apk mkndx only reads the .apk metadata.
+          # The 25.12.6 release image ships the SDK preinstalled in /builder.
+          # Do not run setup.sh: that image has no /builder/keys for GPG
+          # verification, and re-downloading the SDK is unnecessary.
           # --user 0 avoids UID mismatches when reading the 0600 key.
           docker run --rm --user 0 \
             -v "$PWD/signed:/signed" \
@@ -100,24 +102,18 @@ jobs:
             openwrt/sdk:x86_64-25.12.6 \
             -c '
               set -e
-              mkdir -p /sdk
-              cd /sdk
-              VERSION_PATH=releases/25.12.6 \
-              FILE_HOST=https://downloads.openwrt.org \
-                bash /builder/setup.sh
-
               for d in /signed/*; do
                 echo "Signing $d"
                 cd "$d"
-                /sdk/staging_dir/host/bin/apk mkndx \
-                  --root /sdk \
-                  --keys-dir /sdk \
+                /builder/staging_dir/host/bin/apk mkndx \
+                  --root /builder \
+                  --keys-dir /builder \
                   --allow-untrusted \
                   --sign /private-key.pem \
                   --output packages.adb \
                   *.apk
-                /sdk/staging_dir/host/bin/apk adbdump packages.adb >/dev/null
-                /sdk/staging_dir/host/bin/apk verify \
+                /builder/staging_dir/host/bin/apk adbdump packages.adb >/dev/null
+                /builder/staging_dir/host/bin/apk verify \
                   --keys-dir /keys packages.adb
               done
             '
