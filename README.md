@@ -1,6 +1,6 @@
 # OpenWrt Packages Feed
 
-一个面向 **OpenWrt 25.12.6 / apk v3** 的第三方软件源，包含收集并固化在仓库中的
+一个面向 **OpenWrt 25.x / apk v3** 的第三方软件源（基于 25.12.6 构建），包含收集并固化在仓库中的
 OpenWrt 插件、LuCI 应用和 LuCI 主题。CI 使用官方 OpenWrt SDK 为每个支持的架构
 编译 `.apk`，签名索引后发布到 GitHub Pages。
 
@@ -8,7 +8,7 @@ OpenWrt 插件、LuCI 应用和 LuCI 主题。CI 使用官方 OpenWrt SDK 为每
 
 | 项目 | 范围 |
 | --- | --- |
-| OpenWrt | 25.12.6（仅此版本；不包含 24.10/opkg、SNAPSHOT） |
+| OpenWrt | 25.x（基于 25.12.6 构建；不包含 24.10/opkg、SNAPSHOT） |
 | 架构 | `x86_64`、`aarch64_cortex-a53`、`mipsel_24kc` |
 | 包类型 | 用户态插件、LuCI app、LuCI 主题 |
 | 内核模块 | 不支持（kmod 与 target/内核版本绑定） |
@@ -25,7 +25,7 @@ sh /tmp/install-feed.sh
 
 脚本会：
 
-1. 检查发行版是否为 25.12.6；
+1. 检查发行版是否为 25.x；
 2. 检查 `DISTRIB_ARCH` 是否受支持；
 3. 把公钥安装到 `/etc/apk/keys/openwrt-packages.pem`；
 4. 把 feed 写入 `/etc/apk/repositories.d/customfeeds.list`；
@@ -48,6 +48,8 @@ echo "$BASE/25.12.6/$ARCH/custom/packages.adb" \
   >> /etc/apk/repositories.d/customfeeds.list
 apk update
 ```
+
+Feed 路径中的 `25.12.6` 是构建版本；安装脚本接受所有 OpenWrt 25.x 设备。
 
 `/etc/apk/repositories.d/customfeeds.list` 和 `/etc/apk/keys/` 位于 `/etc`，
 sysupgrade 时通常会保留；如果设备没有保留，重新执行安装脚本即可。

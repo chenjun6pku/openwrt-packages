@@ -52,7 +52,7 @@ LUCI_DEPENDS:=+luci-base
 LUCI_PKGARCH:=all
 ```
 
-Lua 应用还需要 `luci-compat`（以及运行时的 `luci-lua-runtime`），但 25.12.6 已弃用
+Lua 应用还需要 `luci-compat`（以及运行时的 `luci-lua-runtime`），但 25.x 已弃用
 Lua，能改 JS 的优先改 JS。
 
 ### B. 上游已经是 OpenWrt 包，但源码是下载的

@@ -19,10 +19,10 @@ FEEDS_FILE="/etc/apk/repositories.d/customfeeds.list"
 . /etc/openwrt_release
 
 case "${DISTRIB_RELEASE:-}" in
-	25.12.6) ;;
+	25.*) ;;
 	*)
 		echo "Unsupported OpenWrt release: ${DISTRIB_RELEASE:-unknown}" >&2
-		echo "This feed supports OpenWrt 25.12.6 only." >&2
+		echo "This feed supports OpenWrt 25.x only." >&2
 		exit 1
 		;;
 esac
