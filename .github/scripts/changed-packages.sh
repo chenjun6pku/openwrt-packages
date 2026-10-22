@@ -28,9 +28,15 @@ names=""
 for dir in $dirs; do
 	[ -f "packages/$dir/Makefile" ] || continue
 
-	dir_names="$(sed -n 's/^PKG_NAME:=//p' "packages/$dir/Makefile")"
+	dir_names="$(sed -n 's/^PKG_NAME[[:space:]]*[?:]*=[[:space:]]*//p' "packages/$dir/Makefile")"
+	if [ -z "$dir_names" ] && grep -q 'include.*luci\.mk' "packages/$dir/Makefile"; then
+		# Standard LuCI recipes omit PKG_NAME; luci.mk derives it from
+		# LUCI_NAME, which itself defaults to the package directory name.
+		dir_names="$(sed -n 's/^LUCI_NAME[[:space:]]*[?:]*=[[:space:]]*//p' "packages/$dir/Makefile")"
+		[ -n "$dir_names" ] || dir_names="$dir"
+	fi
 	[ -n "$dir_names" ] || {
-		echo "No PKG_NAME in packages/$dir/Makefile" >&2
+		echo "No PKG_NAME or LuCI package name in packages/$dir/Makefile" >&2
 		exit 1
 	}
 
