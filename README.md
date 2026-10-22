@@ -1,7 +1,8 @@
 # OpenWrt Packages Feed
 
-面向 **OpenWrt 25.x** 的第三方 apk 软件源。使用官方 **OpenWrt 25.12.6 SDK**
-构建、签名，并发布到 GitHub Pages。
+面向 **OpenWrt 25.x** 的第三方 apk 软件源，用于收集和分发 OpenWrt 插件、
+LuCI 应用和 LuCI 主题。CI 使用官方 **OpenWrt 25.12.6 SDK** 构建 `.apk`，
+签名索引后发布到 GitHub Pages。
 
 ## 支持范围
 
@@ -15,9 +16,7 @@
 
 Feed 路径中的 `25.12.6` 是**构建版本**；安装脚本接受所有 OpenWrt 25.x 设备。
 
-## 快速开始
-
-### 1. 添加 feed（一次性）
+## 添加 feed
 
 ```sh
 uclient-fetch -O /tmp/install-feed.sh \
@@ -27,44 +26,7 @@ sh /tmp/install-feed.sh
 
 脚本会检查系统版本和架构、安装公钥、写入 feed，并执行 `apk update`。
 
-### 2. 安装软件包
-
-以 EDUNET 校园网认证为例：
-
-```sh
-apk add luci-app-edunet
-apk add luci-i18n-edunet-zh-cn   # 可选：中文界面
-```
-
-`luci-app-edunet` 依赖 `luci-base` 和 `minieap`，缺失时会自动安装。
-
-安装其他包只需替换包名，例如：
-
-```sh
-apk add minieap
-apk add feed-selftest
-```
-
-### 3. 配置 EDUNET
-
-在 LuCI 中进入 `Services → EDUNET`，或直接编辑：
-
-```sh
-vi /etc/config/edunet
-```
-
-至少填写 `username`、`password`、`nic`，并将 `enabled` 设为 `1`。然后：
-
-```sh
-/etc/init.d/edunet enable
-/etc/init.d/edunet start
-logread -f
-```
-
-初始化脚本默认不会自动启用。首次启动如果只创建了 `/tmp/edunet.active`
-而没有拉起进程，再执行一次 `/etc/init.d/edunet start`，或在 LuCI 中重新保存并应用。
-
-### 手动添加 feed
+### 手动添加
 
 <details>
 <summary>不使用安装脚本时</summary>
@@ -87,20 +49,34 @@ apk update
 `/etc/apk/repositories.d/customfeeds.list` 和 `/etc/apk/keys/` 位于 `/etc`，
 sysupgrade 时通常会保留；如果没有保留，重新运行安装脚本即可。
 
-## 包列表
+## 安装软件包
 
-| 包名 | 说明 | 来源 |
-| --- | --- | --- |
-| `luci-app-edunet` | EDUNET/minieap 的 LuCI 配置页面 | 本仓库 `packages/luci-app-edunet` |
-| `luci-i18n-edunet-zh-cn` | EDUNET 中文翻译 | 由 `po/zh_Hans` 生成 |
-| `minieap` | 802.1X 客户端，支持锐捷 RJv3 插件 | [chenjun6pku/minieap](https://github.com/chenjun6pku/minieap) fork |
-| `feed-selftest` | 诊断包：验证源、签名和安装 | 本仓库 |
+```sh
+apk update
+apk search <keyword>
+apk add <package>
+```
 
-当前 feed 的版本和架构信息以索引为准：
+`apk` 会自动解析并安装依赖。
+
+也可以在 LuCI 中操作：
+
+```text
+System → Software → Update lists…
+```
+
+然后搜索并安装需要的包。具体包的配置方式由包自身决定，请查看包内文档或
+LuCI 页面。
+
+## 包索引
+
+Feed 索引是动态的，包列表和版本以索引为准：
 
 ```text
 https://chenjun6pku.github.io/openwrt-packages/25.12.6/<arch>/custom/packages.adb
 ```
+
+README 不维护具体包清单；请使用 `apk search` 或 LuCI Software 查看当前内容。
 
 ## 仓库结构
 
@@ -176,9 +152,9 @@ CI 规则：
 | 访问旧 `/25.12/...` 返回 404 | 旧路径已下线；重新运行安装脚本切换到 `/25.12.6/` |
 | `Unsupported OpenWrt release` | feed 只支持 OpenWrt 25.x |
 | 找不到包 | 先 `apk update`，并确认设备 `DISTRIB_ARCH` 在支持列表中 |
-| EDUNET 不启动 | 检查 `/etc/config/edunet`，然后 `/etc/init.d/edunet enable && start` |
+| 包已安装但服务未启动 | 查看该包的文档或 LuCI 页面，并按需启用对应的 init 脚本 |
 
 ## 许可
 
-构建脚本、CI 配置、文档和 `feed-selftest` 使用 MIT 许可证。`packages/` 下的第三方包
-保留其上游许可证；详见各包的 `UPSTREAM.md` 和许可证文件。
+构建脚本、CI 配置和文档使用 MIT 许可证。`packages/` 下的第三方包保留其上游许可证；
+详见各包的 `UPSTREAM.md` 和许可证文件。
