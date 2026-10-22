@@ -10,7 +10,9 @@
 
 所有包都在 `packages/` 下平面存放，类型由包名表达，不再使用额外的分类目录。
 
-包目录名通常与 `PKG_NAME` 一致。
+包目录名通常与 `PKG_NAME` 一致。标准 LuCI 包可以省略 `PKG_NAME`：`luci.mk`
+会从 `LUCI_NAME`（默认是目录名）推导。`scripts/list-packages.sh` 和 PR 变更
+检测按同样规则识别，因此不需要为了本 feed 修改上游 Makefile。
 
 ## 2. 固化上游源码
 
