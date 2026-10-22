@@ -19,10 +19,10 @@ FEEDS_FILE="/etc/apk/repositories.d/customfeeds.list"
 . /etc/openwrt_release
 
 case "${DISTRIB_RELEASE:-}" in
-	25.12*) ;;
+	25.12.6) ;;
 	*)
 		echo "Unsupported OpenWrt release: ${DISTRIB_RELEASE:-unknown}" >&2
-		echo "This feed supports OpenWrt 25.12.x only." >&2
+		echo "This feed supports OpenWrt 25.12.6 only." >&2
 		exit 1
 		;;
 esac
@@ -38,7 +38,7 @@ case "${DISTRIB_ARCH:-}" in
 		;;
 esac
 
-FEED_URL="$BASE_URL/25.12/$arch/custom/packages.adb"
+FEED_URL="$BASE_URL/25.12.6/$arch/custom/packages.adb"
 TMP_KEY="$(mktemp /tmp/openwrt-packages-key.XXXXXX)"
 trap 'rm -f "$TMP_KEY"' EXIT
 

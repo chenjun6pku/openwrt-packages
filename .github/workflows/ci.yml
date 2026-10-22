@@ -50,7 +50,7 @@ jobs:
         if: steps.changed.outputs.has == '1'
         uses: openwrt/gh-action-sdk@v11
         env:
-          ARCH: x86_64-openwrt-25.12
+          ARCH: x86_64-25.12.6
           FEEDNAME: custom
           PACKAGES: ${{ steps.changed.outputs.list }}
           INDEX: "0"

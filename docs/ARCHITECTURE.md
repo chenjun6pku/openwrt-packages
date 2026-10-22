@@ -33,7 +33,7 @@
 2. **二进制 feed**：CI 发布的静态目录，设备通过 HTTPS 访问：
 
    ```text
-   https://chenjun6pku.github.io/openwrt-packages/25.12/<arch>/custom/packages.adb
+   https://chenjun6pku.github.io/openwrt-packages/25.12.6/<arch>/custom/packages.adb
    ```
 
 设备不需要 Git，也不需要构建工具。
@@ -78,7 +78,7 @@ push main / tag:
     └─ 下载全部 .apk
     └─ 用官方 SDK 的 apk mkndx 为每个架构生成并签名 packages.adb
   publish
-    └─ 组装 public/25.12/<arch>/custom/
+    └─ 组装 public/25.12.6/<arch>/custom/
     └─ 部署 GitHub Pages
 ```
 
@@ -117,7 +117,7 @@ apk mkndx \
 
 ```text
 public/
-├── 25.12/
+├── 25.12.6/
 │   ├── x86_64/custom/
 │   │   ├── packages.adb
 │   │   └── *.apk
@@ -135,7 +135,7 @@ public/
 ```text
 /etc/apk/keys/openwrt-packages.pem
 /etc/apk/repositories.d/customfeeds.list
-  -> https://.../25.12/<arch>/custom/packages.adb
+  -> https://.../25.12.6/<arch>/custom/packages.adb
 ```
 
 `install-feed.sh` 是幂等的：它会先删除包含本 feed base URL 的旧行，再写入新行。
@@ -151,7 +151,7 @@ public/
 
 ## 兼容性边界
 
-- **仅 25.12.x**：SDK 使用 `openwrt-25.12` 分支镜像，包依赖该分支的 libc/ABI；
+- **仅 25.12.6**：SDK 固定使用 `25.12.6` release 镜像，包依赖该版本的 libc/ABI；
 - **精确架构匹配**：`x86_64`、`aarch64_cortex-a53`、`mipsel_24kc`；
   `mipsel_24kc_24kf` 等变体不兼容；
 - **无 kmod**：内核模块不能按 package arch 跨设备发布；

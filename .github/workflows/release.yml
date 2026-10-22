@@ -39,7 +39,7 @@ jobs:
       - name: Build packages
         uses: openwrt/gh-action-sdk@v11
         env:
-          ARCH: ${{ matrix.arch }}-openwrt-25.12
+          ARCH: ${{ matrix.arch }}-25.12.6
           FEEDNAME: custom
           PACKAGES: ${{ steps.packages.outputs.list }}
           INDEX: "0"
@@ -97,12 +97,12 @@ jobs:
             -v "$PWD/private-key.pem:/private-key.pem:ro" \
             -v "$PWD/verify-keys:/keys:ro" \
             --entrypoint /bin/bash \
-            openwrt/sdk:x86_64-openwrt-25.12 \
+            openwrt/sdk:x86_64-25.12.6 \
             -c '
               set -e
               mkdir -p /sdk
               cd /sdk
-              VERSION_PATH=releases/25.12.0 \
+              VERSION_PATH=releases/25.12.6 \
               FILE_HOST=https://downloads.openwrt.org \
                 bash /builder/setup.sh
 
@@ -153,11 +153,11 @@ jobs:
       - name: Assemble site
         run: |
           set -e
-          mkdir -p public/25.12
+          mkdir -p public/25.12.6
           for d in signed/*; do
             arch="$(basename "$d")"
-            mkdir -p "public/25.12/$arch"
-            cp -a "$d" "public/25.12/$arch/custom"
+            mkdir -p "public/25.12.6/$arch"
+            cp -a "$d" "public/25.12.6/$arch/custom"
           done
           cp keys/public-key.pem public/public-key.pem
           cp scripts/install-feed.sh public/install-feed.sh
