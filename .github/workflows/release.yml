@@ -10,8 +10,22 @@ on:
       - 'scripts/**'
       - 'keys/**'
       - 'site/**'
+      - 'feed.json'
       - '.github/workflows/release.yml'
   workflow_dispatch:
+    inputs:
+      full_build:
+        description: Build every package and every architecture
+        type: boolean
+        default: false
+      dry_run:
+        description: Build (and sign on main/tags) but do not deploy Pages
+        type: boolean
+        default: false
+      allow_same_version:
+        description: Allow a rebuilt package to keep its version (unsafe for Pages caching)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -20,56 +34,272 @@ concurrency:
   group: release-pages
   cancel-in-progress: false
 
+env:
+  SDK_IMAGE: openwrt/sdk@sha256:a17d6436f7add9207513b6edd0370f5a1aeeceeedf3c9080de8909112892f261
+
 jobs:
+  prepare:
+    name: prepare incremental release
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      full_build: ${{ steps.plan.outputs.full_build }}
+      has_state: ${{ steps.plan.outputs.has_state }}
+      build_version: ${{ steps.feed.outputs.build_version }}
+      base_url: ${{ steps.feed.outputs.base_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Read and validate feed config
+        id: feed
+        run: |
+          set -euo pipefail
+          echo "build_version=$(python3 scripts/feed_meta.py get build_version)" >> "$GITHUB_OUTPUT"
+          echo "base_url=$(python3 scripts/feed_meta.py get base_url)" >> "$GITHUB_OUTPUT"
+          python3 scripts/feed_meta.py check
+
+      - name: Fetch previous feed state
+        id: state
+        env:
+          BASE_URL: ${{ steps.feed.outputs.base_url }}
+          FULL_BUILD: ${{ github.event.inputs.full_build == 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          mkdir -p .release/state
+          present=0
+          if curl -fsSL --retry 3 -H 'Cache-Control: no-cache' \
+            "$BASE_URL/feed-state.json?run=$GITHUB_RUN_ID" \
+            -o .release/state/feed-state.json; then
+            if curl -fsSL --retry 3 -H 'Cache-Control: no-cache' \
+              "$BASE_URL/feed-state.json.sig?run=$GITHUB_RUN_ID" \
+              -o .release/state/feed-state.json.sig &&
+              python3 scripts/feed_state.py verify \
+                --state .release/state/feed-state.json \
+                --sig .release/state/feed-state.json.sig \
+                --feed feed.json; then
+              present=1
+            elif [ "$FULL_BUILD" = "1" ]; then
+              echo "::warning::previous feed state is invalid; continuing because full_build=true"
+              rm -rf .release/state
+            else
+              echo "::error::feed-state.json exists but is not validly signed"
+              exit 1
+            fi
+          else
+            rm -rf .release/state
+          fi
+          echo "present=$present" >> "$GITHUB_OUTPUT"
+
+      - name: Plan incremental build
+        id: plan
+        env:
+          FULL_BUILD: ${{ github.event.inputs.full_build == 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          full_arg=""
+          if [ "$FULL_BUILD" = "1" ]; then
+            full_arg="--full-build"
+          fi
+          python3 scripts/feed_state.py plan \
+            --state .release/state/feed-state.json \
+            --feed feed.json \
+            --github-output "$GITHUB_OUTPUT" \
+            $full_arg
+
+      - name: Upload previous state
+        if: steps.state.outputs.present == '1'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: feed-state
+          path: .release/state
+          if-no-files-found: error
+          retention-days: 1
+
   build:
     name: build ${{ matrix.arch }}
+    needs: prepare
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        arch: [x86_64, aarch64_cortex-a53, mipsel_24kc]
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: List packages
+      - name: Download previous state
+        if: matrix.full == '0'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: feed-state
+          path: .release/state
+
+      - name: Restore unchanged packages
+        id: restore
+        env:
+          ARCH: ${{ matrix.arch }}
+          FULL: ${{ matrix.full }}
+          BUILD_DIRS: ${{ matrix.build_dirs }}
+          REMOVED_DIRS: ${{ matrix.removed_dirs }}
+          BASE_URL: ${{ needs.prepare.outputs.base_url }}
+        run: |
+          set -euo pipefail
+          echo "full=$FULL" >> "$GITHUB_OUTPUT"
+          if [ "$FULL" = "1" ]; then
+            exit 0
+          fi
+          python3 scripts/feed_state.py verify \
+            --state .release/state/feed-state.json \
+            --sig .release/state/feed-state.json.sig \
+            --feed feed.json
+          if ! python3 scripts/feed_state.py restore \
+            --state .release/state/feed-state.json \
+            --arch "$ARCH" \
+            --base-url "$BASE_URL" \
+            --dest previous \
+            --skip-dirs "$BUILD_DIRS $REMOVED_DIRS"; then
+            echo "::warning::restore failed for $ARCH; falling back to a full build for this arch"
+            rm -rf previous
+            echo "full=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Select packages to build
         id: packages
-        run: echo "list=$(./scripts/list-packages.sh | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+        env:
+          FULL: ${{ steps.restore.outputs.full }}
+          CHANGED: ${{ matrix.packages }}
+          ALL: ${{ matrix.all_packages }}
+        run: |
+          set -euo pipefail
+          if [ "$FULL" = "1" ]; then
+            echo "packages=$ALL" >> "$GITHUB_OUTPUT"
+          else
+            echo "packages=$CHANGED" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build packages
-        uses: openwrt/gh-action-sdk@v11
+        if: steps.packages.outputs.packages != ''
+        uses: openwrt/gh-action-sdk@7fc2640243284ecc44f4a9c3f749a61746ee02cb # v11
         env:
-          ARCH: ${{ matrix.arch }}-25.12.6
+          ARCH: ${{ matrix.arch }}-${{ needs.prepare.outputs.build_version }}
           FEEDNAME: custom
-          PACKAGES: ${{ steps.packages.outputs.list }}
+          PACKAGES: ${{ steps.packages.outputs.packages }}
           INDEX: "0"
           NO_REFRESH_CHECK: "true"
 
-      - name: Upload packages
-        uses: actions/upload-artifact@v7
+      - name: Filter built artifacts by source origin
+        env:
+          FULL: ${{ steps.restore.outputs.full }}
+          BUILD_DIRS: ${{ matrix.build_dirs }}
+          BUILT_DIR: bin/packages/${{ matrix.arch }}/custom
+        run: |
+          set -euo pipefail
+          rm -rf built-filtered
+          mkdir -p built-filtered
+          if [ ! -d "$BUILT_DIR" ]; then
+            exit 0
+          fi
+          count="$(find "$BUILT_DIR" -maxdepth 1 -name '*.apk' | wc -l)"
+          if [ "$count" -eq 0 ]; then
+            exit 0
+          fi
+          if [ "$FULL" = "1" ]; then
+            cp "$BUILT_DIR"/*.apk built-filtered/
+          else
+            docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+              --user "$(id -u):$(id -g)" \
+              -e BUILD_DIRS \
+              -v "$PWD/$BUILT_DIR:/in:ro" \
+              -v "$PWD/built-filtered:/out" \
+              --entrypoint /bin/bash "$SDK_IMAGE" -c '
+                set -eu
+                APK=/builder/staging_dir/host/bin/apk
+                for f in /in/*.apk; do
+                  [ -e "$f" ] || continue
+                  origin=$("$APK" adbdump --format json "$f" |
+                    grep -o '"origin"[[:space:]]*:[[:space:]]*"[^"]*"' |
+                    sed "s/.*\"\([^\"]*\)\"$/\1/" | head -n 1)
+                  [ -n "$origin" ] || { echo "no origin in $f" >&2; exit 1; }
+                  src=${origin%/}
+                  src=${src##*/}
+                  case " $BUILD_DIRS " in
+                    *" $src "*) cp "$f" /out/ ;;
+                  esac
+                done
+              '
+          fi
+          if [ "$(find built-filtered -maxdepth 1 -name '*.apk' | wc -l)" -eq 0 ] && [ -n "$BUILD_DIRS" ]; then
+            echo "::error::changed packages produced no .apk files"
+            exit 1
+          fi
+
+      - name: Merge restored and built packages
+        env:
+          ARCH: ${{ matrix.arch }}
+          FULL: ${{ steps.restore.outputs.full }}
+          BUILD_DIRS: ${{ matrix.build_dirs }}
+          REMOVED_DIRS: ${{ matrix.removed_dirs }}
+        run: |
+          set -euo pipefail
+          if [ "$FULL" = "1" ]; then
+            python3 scripts/feed_state.py merge \
+              --arch "$ARCH" \
+              --previous previous \
+              --built built-filtered \
+              --full \
+              --out merged
+          else
+            python3 scripts/feed_state.py merge \
+              --state .release/state/feed-state.json \
+              --arch "$ARCH" \
+              --previous previous \
+              --built built-filtered \
+              --build-dirs "$BUILD_DIRS" \
+              --removed-dirs "$REMOVED_DIRS" \
+              --out merged
+          fi
+
+      - name: Upload arch packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: apk-${{ matrix.arch }}
-          path: bin/packages/${{ matrix.arch }}/custom
+          path: merged
           if-no-files-found: error
           retention-days: 7
 
   sign:
-    name: sign package indices
-    needs: build
+    name: sign package indices and state
+    needs: [prepare, build]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: release
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Download packages
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: apk-*
           path: artifacts
           merge-multiple: false
 
-      - name: Sign indices
+      - name: Download previous state
+        if: needs.prepare.outputs.has_state == '1'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: feed-state
+          path: .release/state
+
+      - name: Write and validate private key
         env:
           APK_PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
         run: |
@@ -78,32 +308,30 @@ jobs:
             echo "APK_PRIVATE_KEY is not set" >&2
             exit 1
           }
-
           umask 077
           printf '%s\n' "$APK_PRIVATE_KEY" > private-key.pem
-          trap 'rm -f private-key.pem' EXIT
+          python3 scripts/feed_meta.py check --check-private-key private-key.pem
 
-          mkdir -p signed verify-keys
-          cp keys/public-key.pem verify-keys/openwrt-packages.pem
+      - name: Sign indices and dump metadata
+        run: |
+          set -euo pipefail
+          active_key="$(python3 scripts/feed_meta.py get active_key_file)"
+          mkdir -p signed metadata verify-keys
+          cp "$active_key" verify-keys/
           for d in artifacts/apk-*; do
             arch="${d#artifacts/apk-}"
             cp -a "$d" "signed/$arch"
           done
-
-          # The 25.12.6 release image ships the SDK preinstalled in /builder.
-          # Do not run setup.sh: that image has no /builder/keys for GPG
-          # verification, and re-downloading the SDK is unnecessary.
-          # --user 0 avoids UID mismatches when reading the 0600 key.
-          docker run --rm --user 0 \
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+            --user "$(id -u):$(id -g)" \
             -v "$PWD/signed:/signed" \
             -v "$PWD/private-key.pem:/private-key.pem:ro" \
             -v "$PWD/verify-keys:/keys:ro" \
-            --entrypoint /bin/bash \
-            openwrt/sdk:x86_64-25.12.6 \
-            -c '
+            -v "$PWD/metadata:/metadata" \
+            --entrypoint /bin/bash "$SDK_IMAGE" -c '
               set -e
               for d in /signed/*; do
-                echo "Signing $d"
+                [ -d "$d" ] || continue
                 cd "$d"
                 /builder/staging_dir/host/bin/apk mkndx \
                   --root /builder \
@@ -112,61 +340,107 @@ jobs:
                   --sign /private-key.pem \
                   --output packages.adb \
                   *.apk
-                /builder/staging_dir/host/bin/apk adbdump packages.adb >/dev/null
-                /builder/staging_dir/host/bin/apk verify \
-                  --keys-dir /keys packages.adb
+                /builder/staging_dir/host/bin/apk verify --keys-dir /keys packages.adb
+                /builder/staging_dir/host/bin/apk adbdump --format json packages.adb \
+                  > "/metadata/$(basename "$d").json"
               done
             '
 
+      - name: Generate feed state
+        env:
+          ALLOW_SAME_VERSION: ${{ github.event.inputs.allow_same_version == 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          previous_arg=""
+          if [ -f .release/state/feed-state.json ]; then
+            previous_arg="--previous-state .release/state/feed-state.json"
+          fi
+          allow_arg=""
+          if [ "$ALLOW_SAME_VERSION" = "1" ]; then
+            allow_arg="--allow-same-version"
+          fi
+          python3 scripts/feed_state.py generate \
+            --signed signed \
+            --metadata metadata \
+            --feed feed.json \
+            --source-commit "$GITHUB_SHA" \
+            $previous_arg \
+            $allow_arg \
+            --out signed/feed-state.json
+          openssl dgst -sha256 -sign private-key.pem \
+            -out signed/feed-state.json.sig signed/feed-state.json
+          active_key="$(python3 scripts/feed_meta.py get active_key_file)"
+          openssl dgst -sha256 -verify "$active_key" \
+            -signature signed/feed-state.json.sig signed/feed-state.json
+          chmod 644 signed/feed-state.json signed/feed-state.json.sig
+
       - name: Upload signed feed
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: signed
           path: signed
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 90
+
+      - name: Remove private key
+        if: always()
+        run: rm -f private-key.pem
 
   publish:
     name: deploy pages
     needs: sign
+    if: >-
+      ${{ !(github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true') &&
+          (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     permissions:
+      contents: read
       pages: write
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Download signed feed
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: signed
           path: signed
 
       - name: Assemble site
         run: |
-          set -e
-          mkdir -p public/25.12.6
-          for d in signed/*; do
+          set -euo pipefail
+          build_version="$(python3 scripts/feed_meta.py get build_version)"
+          python3 scripts/feed_meta.py render --output public
+          for d in signed/*/; do
+            [ -d "$d" ] || continue
             arch="$(basename "$d")"
-            mkdir -p "public/25.12.6/$arch"
-            cp -a "$d" "public/25.12.6/$arch/custom"
+            mkdir -p "public/$build_version/$arch"
+            cp -a "$d" "public/$build_version/$arch/custom"
           done
-          cp keys/public-key.pem public/public-key.pem
-          cp scripts/install-feed.sh public/install-feed.sh
-          cp site/index.html public/index.html
+          cp signed/feed-state.json signed/feed-state.json.sig public/
+          cp feed.json public/feed.json
+          python3 scripts/feed_state.py verify-publish \
+            --state signed/feed-state.json \
+            --sig signed/feed-state.json.sig \
+            --public public
+          python3 scripts/feed_meta.py publish-keys \
+            --output public/keys \
+            --alias public/public-key.pem
 
       - name: Configure Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: public
 
       - name: Deploy Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

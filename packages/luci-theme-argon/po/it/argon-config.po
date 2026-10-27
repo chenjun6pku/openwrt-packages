@@ -536,3 +536,11 @@ msgstr "Annulla"
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Try again after %s."
 msgstr "Riprovare dopo le %s."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Disabled"
+msgstr "Disabled"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update checks are disabled by this feed."
+msgstr "Update checks are disabled by this feed."

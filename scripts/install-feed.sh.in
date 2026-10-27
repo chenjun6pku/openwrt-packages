@@ -1,0 +1,227 @@
+#!/bin/sh
+set -eu
+
+BASE_URL="${FEED_BASE_URL:-@BASE_URL@}"
+BUILD_VERSION="${FEED_BUILD_VERSION:-@BUILD_VERSION@}"
+KEYRING_URL="$BASE_URL/keys/keyring.sha256"
+KEYRING_BASE_URL="$BASE_URL/keys"
+KEYRING_DIR="/etc/apk/keys"
+LEGACY_KEY_URL="$BASE_URL/public-key.pem"
+LEGACY_KEY_PATH="/etc/apk/keys/openwrt-packages.pem"
+FEEDS_FILE="/etc/apk/repositories.d/customfeeds.list"
+
+[ "$(id -u)" = "0" ] || {
+	echo "Please run this script as root." >&2
+	exit 1
+}
+
+[ -r /etc/openwrt_release ] || {
+	echo "This does not look like an OpenWrt system." >&2
+	exit 1
+}
+
+. /etc/openwrt_release
+
+case "${DISTRIB_RELEASE:-}" in
+	@SUPPORTED_RELEASES_CASE@) ;;
+	*)
+		echo "Unsupported OpenWrt release: ${DISTRIB_RELEASE:-unknown}" >&2
+		echo "This feed supports: @SUPPORTED_RELEASES_TEXT@." >&2
+		exit 1
+		;;
+esac
+
+case "${DISTRIB_ARCH:-}" in
+	@ARCH_CASE@)
+		arch="$DISTRIB_ARCH"
+		;;
+	*)
+		echo "Unsupported architecture: ${DISTRIB_ARCH:-unknown}" >&2
+		echo "Supported: @ARCH_CASE@" >&2
+		exit 1
+		;;
+esac
+
+FEED_URL="$BASE_URL/$BUILD_VERSION/$arch/custom/packages.adb"
+TMP_DIR="$(mktemp -d /tmp/openwrt-packages-keys.XXXXXX)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+fetch() {
+	if command -v uclient-fetch >/dev/null 2>&1; then
+		uclient-fetch -O "$2" "$1"
+	elif command -v wget >/dev/null 2>&1; then
+		wget -O "$2" "$1"
+	else
+		echo "Neither uclient-fetch nor wget is available." >&2
+		return 1
+	fi
+}
+
+install_legacy_key() {
+	key_path="$TMP_DIR/openwrt-packages.pem"
+	echo "Downloading feed signing key..."
+	fetch "$LEGACY_KEY_URL" "$key_path" || {
+		echo "Unable to download the feed signing key." >&2
+		return 1
+	}
+	[ -s "$key_path" ] || {
+		echo "Downloaded key is empty." >&2
+		return 1
+	}
+	head -n 1 "$key_path" | grep -q 'BEGIN PUBLIC KEY' || {
+		echo "Downloaded key is not a PEM public key." >&2
+		return 1
+	}
+	tail -n 1 "$key_path" | grep -q 'END PUBLIC KEY' || {
+		echo "Downloaded key is not a complete PEM public key." >&2
+		return 1
+	}
+	mkdir -p "$KEYRING_DIR"
+	cat "$key_path" > "$LEGACY_KEY_PATH"
+	chmod 644 "$LEGACY_KEY_PATH"
+	mkdir -p "$KEYRING_DIR"
+	chmod 755 "$KEYRING_DIR"
+}
+
+# Returns:
+#   0 = keyring installed and verified
+#   2 = keyring manifest unavailable (caller may use the legacy single key)
+#   1 = keyring manifest or a key is invalid (fail closed)
+install_keyring() {
+	manifest="$TMP_DIR/keyring.sha256"
+	names="$TMP_DIR/keyring.names"
+	: > "$names"
+
+	if ! fetch "$KEYRING_URL" "$manifest" 2>/dev/null || [ ! -s "$manifest" ]; then
+		return 2
+	fi
+
+	manifest_size="$(wc -c < "$manifest")"
+	[ "$manifest_size" -le 8192 ] || {
+		echo "Keyring manifest is too large." >&2
+		return 1
+	}
+
+	count=0
+	while IFS= read -r line; do
+		[ -n "$line" ] || continue
+		set -- $line
+		[ "$#" -eq 2 ] || {
+			echo "Malformed keyring manifest line: $line" >&2
+			return 1
+		}
+		hash="$1"
+		name="$2"
+		case "$hash" in
+			*[!0-9a-f]*|'')
+				echo "Invalid key hash in keyring: $hash" >&2
+				return 1
+				;;
+		esac
+		[ "${#hash}" -eq 64 ] || {
+			echo "Invalid key hash length in keyring: $hash" >&2
+			return 1
+		}
+		case "$name" in
+			openwrt-packages*.pem) ;;
+			*)
+				echo "Invalid key name in keyring: $name" >&2
+				return 1
+				;;
+		esac
+		case "$name" in
+			*/*)
+				echo "Invalid key name in keyring: $name" >&2
+				return 1
+				;;
+		esac
+		printf '%s\n' "$name" >> "$names"
+		count=$((count + 1))
+	done < "$manifest"
+
+	[ "$count" -ge 1 ] && [ "$count" -le 8 ] || {
+		echo "Keyring manifest must contain 1-8 keys." >&2
+		return 1
+	}
+	[ -z "$(sort "$names" | uniq -d)" ] || {
+		echo "Duplicate key name in keyring." >&2
+		return 1
+	}
+	grep -qx 'openwrt-packages.pem' "$names" || {
+		echo "Keyring is missing the legacy openwrt-packages.pem alias." >&2
+		return 1
+	}
+
+	while IFS= read -r line; do
+		[ -n "$line" ] || continue
+		set -- $line
+		hash="$1"
+		name="$2"
+		target="$TMP_DIR/$name"
+		fetch "$KEYRING_BASE_URL/$name" "$target" || {
+			echo "Unable to download signing key: $name" >&2
+			return 1
+		}
+		[ -s "$target" ] || {
+			echo "Downloaded key is empty: $name" >&2
+			return 1
+		}
+		key_size="$(wc -c < "$target")"
+		[ "$key_size" -le 4096 ] || {
+			echo "Downloaded key is too large: $name" >&2
+			return 1
+		}
+		head -n 1 "$target" | grep -q 'BEGIN PUBLIC KEY' || {
+			echo "Downloaded key is not a PEM public key: $name" >&2
+			return 1
+		}
+		tail -n 1 "$target" | grep -q 'END PUBLIC KEY' || {
+			echo "Downloaded key is not a complete PEM public key: $name" >&2
+			return 1
+		}
+		actual="$(sha256sum "$target" | awk '{ print $1 }')"
+		[ "$actual" = "$hash" ] || {
+			echo "Checksum mismatch for signing key: $name" >&2
+			return 1
+		}
+	done < "$manifest"
+
+	mkdir -p "$KEYRING_DIR"
+	chmod 755 "$KEYRING_DIR"
+	while IFS= read -r name; do
+		chmod 644 "$TMP_DIR/$name"
+		mv -f "$TMP_DIR/$name" "$KEYRING_DIR/$name"
+	done < "$names"
+
+	for key in "$KEYRING_DIR"/openwrt-packages*.pem; do
+		[ -f "$key" ] || continue
+		base="${key##*/}"
+		grep -qx "$base" "$names" || rm -f "$key"
+	done
+	return 0
+}
+
+keyring_status=0
+install_keyring || keyring_status=$?
+if [ "$keyring_status" -eq 2 ]; then
+	if [ -s "$LEGACY_KEY_PATH" ]; then
+		echo "WARNING: keyring manifest unavailable; keeping existing key $LEGACY_KEY_PATH" >&2
+	else
+		install_legacy_key
+	fi
+elif [ "$keyring_status" -ne 0 ]; then
+	echo "Refusing to install an unverified feed keyring." >&2
+	exit 1
+fi
+
+mkdir -p /etc/apk/repositories.d
+touch "$FEEDS_FILE"
+grep -vF "$BASE_URL" "$FEEDS_FILE" > "$FEEDS_FILE.tmp" || true
+echo "$FEED_URL" >> "$FEEDS_FILE.tmp"
+mv "$FEEDS_FILE.tmp" "$FEEDS_FILE"
+
+echo "Configured feed: $FEED_URL"
+apk update
+
+echo
+echo "Done. Install a package with: apk add <package>"

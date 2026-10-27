@@ -536,3 +536,11 @@ msgstr "취소"
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Try again after %s."
 msgstr "%s 이후에 다시 시도하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Disabled"
+msgstr "Disabled"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update checks are disabled by this feed."
+msgstr "Update checks are disabled by this feed."

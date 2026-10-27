@@ -9,13 +9,18 @@
 
 ## Local changes
 
-- No source changes.
 - `compat/luci-app-argon-config/Makefile` was renamed to
   `compat/luci-app-argon-config/Makefile.upstream` by
   `scripts/vendor-upstream.sh`, so the OpenWrt feed scanner does not index the
   nested recipe twice. The same recipe is published separately as
   `packages/luci-app-argon-config/`.
 - The upstream `.github/` directory is excluded by the vendor script.
+- Upstream self-update is disabled for this feed: `root/usr/share/argon/update-sources.json`
+  carries `"disabled": true`, and `root/usr/libexec/rpcd/luci.argon_update`
+  short-circuits check/get/start when it is set. `htdocs/luci-static/resources/argon/updates.js`
+  hides the update controls and shows a disabled notice. `PKG_RELEASE` was
+  bumped so devices receive this policy.
+- Feed-managed updates remain available through `apk add --upgrade luci-theme-argon`.
 
 ## Notes
 

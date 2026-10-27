@@ -82,17 +82,21 @@ README 不维护具体包清单；请使用 `apk search` 或 LuCI Software 查�
 
 ```text
 packages/               每个目录一个 OpenWrt 包（luci-app-*、luci-theme-*、普通插件）
-scripts/                设备安装脚本、源码快照和版本检查脚本
-keys/                   只存放签名公钥
-site/                   GitHub Pages 首页
-docs/                   架构和新增包说明
+scripts/                设备安装脚本模板、包发现/增量发布工具、源码快照脚本
+keys/                   只存放签名公钥（可多把，配合 keyring）
+site/                   GitHub Pages 首页模板
+docs/                   架构、增量发布和新增包说明
 vendor/                 可选：多个包共享的上游源码
+feed.json               feed 配置：构建版本、架构、base URL、签名密钥
 .github/workflows/      PR CI 和 release 流水线
-.github/scripts/        PR 变更包检测
+.github/scripts/        PR 变更包检测（兼容 wrapper）
 ```
 
 每个包目录包含 `Makefile`、可选的 `patches/`、`files/`，以及源码或 LuCI 包文件；
 来源、commit、许可证和本地改动记录在 `UPSTREAM.md`。
+
+发布状态保存在 `feed-state.json`（由 CI 生成并签名，不提交到 git）。每个包目录的
+git tree hash 决定是否需要重编译。
 
 ## 源码策略
 
@@ -129,19 +133,24 @@ make package/<pkg>/compile V=s
 
 CI 规则：
 
-- **PR**：只在 `x86_64-25.12.6` 上编译变更包及依赖；
-- **push 到 `main` / `v*` tag**：三个架构全量构建 → 独立签名 job → 部署 Pages；
-- Release 固定使用 **25.12.6** SDK 镜像；
-- 构建和签名拆开：build job 不接触私钥，sign job 只运行 `apk mkndx`。
+- **PR**：只在 x86_64 上编译变更包及依赖；
+- **push 到 `main` / `v*` tag**：按包目录的 git tree hash 做**增量构建**；未变包复用上一版已签名的 `.apk`，只重编译变更包；随后独立签名并部署 Pages；
+- 第一次使用新流程（或 state 缺失/损坏、SDK 构建版本变化、`vendor/` 变化）会自动全量构建一次，之后恢复增量；
+- Release 使用 `feed.json` 中的 `build_version`（当前 **25.12.6**）SDK 镜像；
+- 构建和签名拆开：build job 不接触私钥，sign job 只运行 `apk mkndx`；
+- `workflow_dispatch` 支持 `full_build`（强制全量）、`dry_run`（主分支上构建+签名但不部署；分支上只构建、不签名）、`allow_same_version`（显式允许同版本重建）。
 
-详细架构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+详细架构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，增量状态格式见
+[docs/INCREMENTAL.md](docs/INCREMENTAL.md)。
 
 ## 签名与安全
 
-- feed 使用 EC P-256 私钥签名索引；
+- feed 使用 EC P-256 私钥签名索引；`feed-state.json` 也用同一把 key 签名，供下一次增量构建验签；
 - 私钥只保存在 GitHub Actions secret `APK_PRIVATE_KEY` 中；
-- 公钥为 [keys/public-key.pem](keys/public-key.pem)，安装脚本会自动放到
-  `/etc/apk/keys/openwrt-packages.pem`；
+- 公钥为 [keys/public-key.pem](keys/public-key.pem)，安装脚本会通过 `keys/keyring.sha256`
+  校验并安装全部 active/trusted 公钥，同时保留
+  `/etc/apk/keys/openwrt-packages.pem` 兼容路径；
+- 主题不再使用上游在线自更新，统一通过本 feed 的 `apk add --upgrade` 更新；
 - 密钥生成、配置和轮换见 [keys/README.md](keys/README.md)。
 
 ## 故障排查

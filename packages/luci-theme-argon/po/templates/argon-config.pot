@@ -421,6 +421,14 @@ msgid "Not checked yet."
 msgstr ""
 
 #: htdocs/luci-static/resources/argon/updates.js
+msgid "Disabled"
+msgstr ""
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update checks are disabled by this feed."
+msgstr ""
+
+#: htdocs/luci-static/resources/argon/updates.js
 msgid "Checking for updates..."
 msgstr ""
 

@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "name": "openwrt-packages",
+  "base_url": "https://chenjun6pku.github.io/openwrt-packages",
+  "build_version": "25.12.6",
+  "supported_releases": [
+    "25.*"
+  ],
+  "arches": [
+    "x86_64",
+    "aarch64_cortex-a53",
+    "mipsel_24kc"
+  ],
+  "signing": {
+    "active": "2026",
+    "keys": [
+      {
+        "id": "2026",
+        "file": "keys/public-key.pem",
+        "install_name": "openwrt-packages.pem",
+        "sha256": "79130b34e6e61aa15dd99ef60c4c877ddc1da7d70ad51b407c7549a3dacce930",
+        "status": "active"
+      }
+    ]
+  }
+}

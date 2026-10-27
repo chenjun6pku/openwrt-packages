@@ -148,6 +148,20 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
         self.env['OPKG_VERSION'] = ''
         self.assertEqual(self.call('get')['current_version'], '')
 
+    def test_disabled_policy_blocks_network_and_install(self):
+        (self.directory / 'sources.json').write_text(json.dumps({
+            'primary': PRIMARY, 'fallback': FALLBACK, 'disabled': True}))
+        checked = self.call('check')
+        self.assertEqual(checked['result'], 0)
+        self.assertTrue(checked['disabled'])
+        self.assertFalse(self.requests.exists())
+        fetched = self.call('get')
+        self.assertTrue(fetched['disabled'])
+        self.assertFalse(self.requests.exists())
+        started = self.call('start', tag='v3.0.0', package='luci-theme-argon-3.0.0-r2.apk')
+        self.assertEqual(started['result'], 3)
+        self.assertFalse((self.directory / 'mutations').exists())
+
     def test_check_uses_configured_static_source_and_ignores_rpc_urls(self):
         result = self.call('check', url='http://untrusted.invalid/', version='99.0.0')
         self.assertEqual(result['result'], 0)

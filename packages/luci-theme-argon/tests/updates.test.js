@@ -131,6 +131,20 @@ test('release notes remain text, are bounded, and have an explicit empty state',
 	}
 });
 
+test('disabled state hides update actions and does not call check', async () => {
+	const f = fixture({ initial: { result: 0, disabled: true, current_version: '3.1.0-r20261027',
+		package_manager: 'apk', upgrade: { phase: 'idle', active: false } } });
+	await f.render();
+	assert.deepEqual(f.calls, ['get']);
+	assert.equal(f.status(), 'Update checks are disabled by this feed.');
+	assert.equal(f.button().disabled, true);
+	assert.equal(f.installButton().hidden, true);
+	assert.equal(f.find('a', 'Download package').hidden, true);
+	assert.equal(f.find('a', 'View release').hidden, true);
+	await f.button().click();
+	assert.deepEqual(f.calls, ['get']);
+});
+
 test('a failed local state load can recover through a manual check', async () => {
 	const f = fixture({ getError: true, check: checked('3.0.0-r1') });
 	await f.render();

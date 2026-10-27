@@ -22,24 +22,22 @@
 </head>
 <body>
   <h1>OpenWrt Packages Feed</h1>
-  <p class="muted">OpenWrt 25.x · apk v3 · signed feed（built with 25.12.6）</p>
+  <p class="muted">OpenWrt @SUPPORTED_RELEASES_TEXT@ · apk v3 · signed feed（built with @BUILD_VERSION@）</p>
 
   <h2>安装</h2>
   <pre><code>uclient-fetch -O /tmp/install-feed.sh \
-  https://chenjun6pku.github.io/openwrt-packages/install-feed.sh
+  @BASE_URL@/install-feed.sh
 sh /tmp/install-feed.sh
 apk add &lt;package&gt;</code></pre>
 
   <h2>架构</h2>
   <table>
     <tr><th>DISTRIB_ARCH</th><th>Feed URL</th></tr>
-    <tr><td>x86_64</td><td><code>/25.12.6/x86_64/custom/packages.adb</code></td></tr>
-    <tr><td>aarch64_cortex-a53</td><td><code>/25.12.6/aarch64_cortex-a53/custom/packages.adb</code></td></tr>
-    <tr><td>mipsel_24kc</td><td><code>/25.12.6/mipsel_24kc/custom/packages.adb</code></td></tr>
+@ARCH_ROWS@
   </table>
-  <p class="muted">Feed 路径中的 25.12.6 是构建版本；安装脚本接受所有 OpenWrt 25.x 设备。</p>
+  <p class="muted">Feed 路径中的 @BUILD_VERSION@ 是构建版本；安装脚本接受所有 OpenWrt @SUPPORTED_RELEASES_TEXT@ 设备。</p>
 
   <h2>签名公钥</h2>
-  <p><a href="public-key.pem">public-key.pem</a></p>
+  <p><a href="public-key.pem">public-key.pem</a> · <a href="keys/keyring.sha256">keyring.sha256</a></p>
 </body>
 </html>

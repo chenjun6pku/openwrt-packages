@@ -538,3 +538,11 @@ msgstr "取消"
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Try again after %s."
 msgstr "請在 %s 後重試。"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Disabled"
+msgstr "已停用"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update checks are disabled by this feed."
+msgstr "此 feed 已停用更新檢查。"

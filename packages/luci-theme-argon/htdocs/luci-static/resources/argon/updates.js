@@ -33,7 +33,7 @@ function compare(a, b) {
 }
 
 function release(state) {
-	if (!state || typeof state.tag !== 'string' || !/^v?[0-9]+(?:\.[0-9]+){1,3}$/.test(state.tag))
+	if (!state || state.disabled || typeof state.tag !== 'string' || !/^v?[0-9]+(?:\.[0-9]+){1,3}$/.test(state.tag))
 		return null;
 	var manager = state.package_manager;
 	var file = state[manager === 'opkg' ? 'ipk' : 'apk'];
@@ -116,13 +116,14 @@ return baseclass.extend({
 			var remote = release(state);
 			var local = version(state && state.current_version);
 			return !!(remote && remote.file && remote.parsed && local && compare(local, remote.parsed) < 0 &&
-				state.can_upgrade && map && !map.readonly && !needsReload());
+				state.can_upgrade && !state.disabled && map && !map.readonly && !needsReload());
 		}
 
 		function refresh() {
 			var remote = release(state);
 			var local = version(state && state.current_version);
 			var job = state && state.upgrade || {};
+			var disabled = !!(state && state.disabled);
 			if (job.active)
 				observedInstallation = true;
 			var active = !!job.active || monitoring;
@@ -135,23 +136,24 @@ return baseclass.extend({
 			}
 			lastPhase = job.phase;
 			current.textContent = state && state.current_version || _('Unknown version');
-			latest.textContent = remote ? remote.version : _('Not checked yet.');
-			button.disabled = busy || active || confirming;
+			latest.textContent = disabled ? _('Disabled') : remote ? remote.version : _('Not checked yet.');
+			button.disabled = busy || active || confirming || disabled;
 			button.className = 'cbi-button ' + (remote ? 'cbi-button-neutral' : 'cbi-button-action');
 			installButton.hidden = !mayInstall();
-			installButton.disabled = busy || active || confirming;
-			installHint.hidden = !(available && !state.can_upgrade && map && !map.readonly && !active && !reloadNeeded);
+			installButton.disabled = busy || active || confirming || disabled;
+			installHint.hidden = disabled || !(available && !state.can_upgrade && map && !map.readonly && !active && !reloadNeeded);
 			reloadButton.hidden = !reloadNeeded || active;
 			button.textContent = busy ? _('Checking for updates...') : _('Check for updates');
 			content.setAttribute('aria-busy', String(busy));
+			releaseLink.hidden = disabled;
 			releaseLink.href = remote ? releases + '/tag/' + encodeURIComponent(remote.tag) : releases + '/latest';
-			downloadLink.hidden = !(remote && remote.file) || active || reloadNeeded || order !== null && order >= 0;
+			downloadLink.hidden = disabled || !(remote && remote.file) || active || reloadNeeded || order !== null && order >= 0;
 			if (!downloadLink.hidden)
 				downloadLink.href = releases + '/download/' + encodeURIComponent(remote.tag) + '/' + encodeURIComponent(remote.file);
-			checked.hidden = !(remote && Number.isSafeInteger(state.checked_at) && state.checked_at > 0);
+			checked.hidden = disabled || !(remote && Number.isSafeInteger(state.checked_at) && state.checked_at > 0);
 			if (!checked.hidden)
 				checked.textContent = _('Last checked: %s').format(new Date(state.checked_at * 1000).toLocaleString());
-			details.hidden = !remote;
+			details.hidden = disabled || !remote;
 			notes.textContent = remote && typeof state.notes === 'string' && state.notes.trim() ?
 				state.notes.slice(0, 32768) + (state.notes.length > 32768 ? '\n…' : '') : _('No release notes were published.');
 			logDetails.hidden = typeof job.log !== 'string' || !job.log.trim();
@@ -162,6 +164,8 @@ return baseclass.extend({
 				showStatus(_('Checking for updates...'), 'working');
 			else if (!state || state.result !== 0)
 				showStatus(checkError(state && state.retry_at), 'error');
+			else if (disabled)
+				showStatus(_('Update checks are disabled by this feed.'));
 			else if (!remote)
 				showStatus(_('Not checked yet.'));
 			else if (!local || !remote.parsed)
@@ -297,11 +301,17 @@ return baseclass.extend({
 		}
 
 		function check() {
-			if (busy || monitoring || confirming)
+			if (busy || monitoring || confirming || (state && state.disabled))
 				return Promise.resolve();
 			busy = true;
 			refresh();
 			return callCheck().then(function(result) {
+				if (result.disabled) {
+					state = result;
+					busy = false;
+					refresh();
+					return;
+				}
 				if (result.result !== 0 || !release(result)) {
 					if (state)
 						state.can_upgrade = false;

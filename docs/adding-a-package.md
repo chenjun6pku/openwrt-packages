@@ -151,5 +151,12 @@ make package/myplugin/compile V=s
 ## 6. PR 与发布
 
 - PR 只在 x86_64 上编译变更包（修改 CI/自动发现脚本时全量验证）；
-- 合并到 `main` 或打 `v*` tag 后，release workflow 仍会在三个架构上全量构建、签名并发布；
+- 合并到 `main` 或打 `v*` tag 后，release workflow 会根据包目录的 git tree hash
+  **增量构建**：新增/修改的包会编译，未变包复用上一版已签名产物；
+- 首次使用增量流程、state 缺失/损坏、SDK 构建版本变化或 `vendor/` 变化时会自动全量；
+- 修改包内容后必须递增 `PKG_RELEASE`；sign 会拒绝同版本但字节变化的包
+  （除非显式 `allow_same_version=true`）；
+- 新增包不需要修改 `scripts/list-packages.sh` 或 workflow；目录中包含 `Makefile` 即可；
 - 发布后可用 `apk add <package>` 在设备上验证。
+
+增量状态和故障回退见 [INCREMENTAL.md](INCREMENTAL.md)。

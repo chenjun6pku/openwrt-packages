@@ -57,12 +57,18 @@ valid_source() {
 load_sources() {
 	primary_url=''
 	fallback_url='https://jerrykuku.github.io/luci-theme-argon/updates/stable.json'
+	update_disabled=0
 	if [ -f "$sources_file" ] && [ ! -L "$sources_file" ] &&
 		[ "$(wc -c < "$sources_file")" -le 4096 ] && json_load_file "$sources_file"; then
 		json_get_var configured_primary primary
 		json_get_var configured_fallback fallback
+		json_get_var configured_disabled disabled
 		valid_source "$configured_primary" && primary_url="$configured_primary"
 		valid_source "$configured_fallback" && fallback_url="$configured_fallback"
+		case "$configured_disabled" in
+			1|true) update_disabled=1 ;;
+			*) update_disabled=0 ;;
+		esac
 	fi
 }
 
@@ -105,6 +111,12 @@ check_failure() {
 }
 
 check_updates() {
+	load_sources
+	if [ "$update_disabled" = 1 ]; then
+		json_init
+		respond 0
+		return
+	fi
 	prepare_state || { fail 1; return; }
 	# Separate from the installation lock. Concurrent tabs reuse the first check.
 	exec 7>"$state_dir/check.lock"
@@ -248,6 +260,7 @@ respond() {
 		can_upgrade=1
 	fi
 	json_add_int result "$1"
+	json_add_boolean disabled "${update_disabled:-0}"
 	json_add_string current_version "$current_version"
 	json_add_string package_manager "$package_manager"
 	json_add_boolean can_upgrade "$can_upgrade"
@@ -272,6 +285,11 @@ run_upgrade() {
 	work="${0%/*}"
 	case "$work" in "$state_dir"/job.??????) ;; *) return 1 ;; esac
 	[ -d "$work" ] && [ ! -L "$work" ] && [ -f "$work/release.json" ] || return 1
+	load_sources
+	if [ "$update_disabled" = 1 ]; then
+		write_status failed disabled
+		return
+	fi
 	trap 'rm -rf "$work"' EXIT
 	trap 'write_status failed interrupted; exit 1' INT TERM
 	json_load_file "$work/release.json" && select_package || { write_status failed metadata; return; }
@@ -323,6 +341,11 @@ run_upgrade() {
 }
 
 start_upgrade() {
+	load_sources
+	if [ "$update_disabled" = 1 ]; then
+		fail 3
+		return
+	fi
 	read -r request
 	json_load "$request" || { fail 3; return; }
 	json_get_var requested_tag tag
@@ -371,6 +394,12 @@ call)
 		exit 0
 	fi
 	if [ "$2" = get ]; then
+		load_sources
+		if [ "$update_disabled" = 1 ]; then
+			json_init
+			respond 0
+			exit 0
+		fi
 		read_cache || json_init
 		respond 0
 		exit 0
