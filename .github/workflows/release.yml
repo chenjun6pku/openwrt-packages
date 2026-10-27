@@ -223,7 +223,7 @@ jobs:
                 for f in /in/*.apk; do
                   [ -e "$f" ] || continue
                   origin=$("$APK" adbdump --format json "$f" |
-                    grep -o '"origin"[[:space:]]*:[[:space:]]*"[^"]*"' |
+                    grep -o "\"origin\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" |
                     sed "s/.*\"\([^\"]*\)\"$/\1/" | head -n 1)
                   [ -n "$origin" ] || { echo "no origin in $f" >&2; exit 1; }
                   src=${origin%/}
