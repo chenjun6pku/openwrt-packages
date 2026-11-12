@@ -447,15 +447,14 @@ return view.extend({
 				o.modalonly = true;
 
 				ss = o.subsection;
-				ss.tab('general', _('General Setup'));
 
-				o = ss.taboption('general', form.Value, 'ssid', _('<abbr title="Extended Service Set Identifier">ESSID</abbr>'));
+				o = ss.option(form.Value, 'ssid', _('<abbr title="Extended Service Set Identifier">ESSID</abbr>'));
 				o.datatype = 'maxlength(32)';
 
 				const crypto_modes = [];
 				const is_6ghz = uci.get('wireless', radioNet.getWifiDeviceName(), 'band') == '6g';
 
-				let encr = o = ss.taboption('general', form.ListValue, 'encryption', _('Encryption'));
+				let encr = o = ss.option(form.ListValue, 'encryption', _('Encryption'));
 
 				o.cfgvalue = function(section_id) {
 					const v = String(uci.get('wireless', section_id, 'encryption'));
@@ -502,7 +501,7 @@ return view.extend({
 					encr.value(crypto_mode[0], '%s (%s)'.format(crypto_mode[1], security_level));
 				});
 
-				o = ss.taboption('general', form.Value, '_wpa_key', _('Key'));
+				o = ss.option(form.Value, '_wpa_key', _('Key'));
 				add_dependency_permutations(o, { encryption: [ 'psk2', 'sae', 'sae-mixed' ] });
 				o.datatype = 'wpakey';
 				o.rmempty = true;
