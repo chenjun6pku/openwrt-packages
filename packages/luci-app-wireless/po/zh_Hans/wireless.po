@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
-"Project-Id-Version: luci-app-wireless 1.0.0-r2\n"
+"Project-Id-Version: luci-app-wireless 1.0.0-r3\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: zh_Hans\n"
@@ -150,66 +150,62 @@ msgid "Edit"
 msgstr "编辑"
 
 #: htdocs/luci-static/resources/view/wireless.js:446
-msgid "Interface Configuration"
-msgstr "接口配置"
-
-#: htdocs/luci-static/resources/view/wireless.js:451
 msgid "<abbr title=\"Extended Service Set Identifier\">ESSID</abbr>"
 msgstr "<abbr title=\"Extended Service Set Identifier（扩展服务集标识符）\">ESSID</abbr>"
 
-#: htdocs/luci-static/resources/view/wireless.js:477
+#: htdocs/luci-static/resources/view/wireless.js:472
 msgid "WPA-Encryption requires wpa_supplicant (for client mode) or hostapd (for AP and ad-hoc mode) to be installed."
 msgstr "WPA 加密需要安装 wpa_supplicant（客户端模式）或安装 hostapd（接入点 AP、点对点 Ad-Hoc 模式）。"
 
-#: htdocs/luci-static/resources/view/wireless.js:492
+#: htdocs/luci-static/resources/view/wireless.js:487
 msgid "No Encryption"
 msgstr "无加密"
 
-#: htdocs/luci-static/resources/view/wireless.js:497
+#: htdocs/luci-static/resources/view/wireless.js:492
 msgid "strong security"
 msgstr "强安全性"
 
-#: htdocs/luci-static/resources/view/wireless.js:498
+#: htdocs/luci-static/resources/view/wireless.js:493
 msgid "medium security"
 msgstr "中等安全性"
 
-#: htdocs/luci-static/resources/view/wireless.js:499
+#: htdocs/luci-static/resources/view/wireless.js:494
 msgid "weak security"
 msgstr "弱安全性"
 
-#: htdocs/luci-static/resources/view/wireless.js:499
+#: htdocs/luci-static/resources/view/wireless.js:494
 msgid "open network"
 msgstr "开放网络"
 
-#: htdocs/luci-static/resources/view/wireless.js:504
+#: htdocs/luci-static/resources/view/wireless.js:499
 msgid "Key"
 msgstr "密钥"
 
-#: htdocs/luci-static/resources/view/wireless.js:591
+#: htdocs/luci-static/resources/view/wireless.js:586
 msgid "Network"
 msgstr "网络"
 
-#: htdocs/luci-static/resources/view/wireless.js:592
+#: htdocs/luci-static/resources/view/wireless.js:587
 msgid "MAC address"
 msgstr "MAC 地址"
 
-#: htdocs/luci-static/resources/view/wireless.js:593
+#: htdocs/luci-static/resources/view/wireless.js:588
 msgid "Host"
 msgstr "主机"
 
-#: htdocs/luci-static/resources/view/wireless.js:594
+#: htdocs/luci-static/resources/view/wireless.js:589
 msgid "Signal / Noise"
 msgstr "信号/噪声"
 
-#: htdocs/luci-static/resources/view/wireless.js:595
+#: htdocs/luci-static/resources/view/wireless.js:590
 msgid "RX Rate / TX Rate"
 msgstr "接收速率/发送速率"
 
-#: htdocs/luci-static/resources/view/wireless.js:599
+#: htdocs/luci-static/resources/view/wireless.js:594
 msgid "Collecting data..."
 msgstr "正在收集数据…"
 
-#: htdocs/luci-static/resources/view/wireless.js:602
+#: htdocs/luci-static/resources/view/wireless.js:597
 msgid "Associated Stations"
 msgstr "已连接站点"
 

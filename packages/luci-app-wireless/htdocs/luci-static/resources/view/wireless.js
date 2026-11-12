@@ -375,7 +375,7 @@ return view.extend({
 
 		m = new form.Map('wireless');
 
-		s = m.section(form.GridSection, 'wifi-device', _('Wireless Overview'));
+		s = m.section(form.GridSection, 'wifi-iface', _('Wireless Overview'));
 		s.anonymous = true;
 		s.addremove = false;
 
@@ -441,20 +441,15 @@ return view.extend({
 		s.addModalOptions = function(s) {
 			return network.getWifiNetwork(s.section).then(function(radioNet) {
 				const hwtype = uci.get('wireless', radioNet.getWifiDeviceName(), 'type');
-				let o, ss;
+				let o;
 
-				o = s.option(form.SectionValue, '_device', form.NamedSection, radioNet.getName(), 'wifi-iface', _('Interface Configuration'));
-				o.modalonly = true;
-
-				ss = o.subsection;
-
-				o = ss.option(form.Value, 'ssid', _('<abbr title="Extended Service Set Identifier">ESSID</abbr>'));
+				o = s.option(form.Value, 'ssid', _('<abbr title="Extended Service Set Identifier">ESSID</abbr>'));
 				o.datatype = 'maxlength(32)';
 
 				const crypto_modes = [];
 				const is_6ghz = uci.get('wireless', radioNet.getWifiDeviceName(), 'band') == '6g';
 
-				let encr = o = ss.option(form.ListValue, 'encryption', _('Encryption'));
+				let encr = o = s.option(form.ListValue, 'encryption', _('Encryption'));
 
 				o.cfgvalue = function(section_id) {
 					const v = String(uci.get('wireless', section_id, 'encryption'));
@@ -501,7 +496,7 @@ return view.extend({
 					encr.value(crypto_mode[0], '%s (%s)'.format(crypto_mode[1], security_level));
 				});
 
-				o = ss.option(form.Value, '_wpa_key', _('Key'));
+				o = s.option(form.Value, '_wpa_key', _('Key'));
 				add_dependency_permutations(o, { encryption: [ 'psk2', 'sae', 'sae-mixed' ] });
 				o.datatype = 'wpakey';
 				o.rmempty = true;

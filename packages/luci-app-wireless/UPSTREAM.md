@@ -30,8 +30,9 @@
 - Retained UCI section/option names and ubus calls are unchanged. The edit
   form only writes `ssid`, `encryption` and `key`; the enable/disable action
   writes `disabled`. Other existing options are left untouched.
-- The ESSID, Encryption and Key fields are rendered directly in the
-  Interface Configuration section; the General Setup tab is not used.
+- The ESSID, Encryption and Key fields are rendered directly in the edit
+  modal. The nested Interface Configuration section and its heading are
+  removed; the overview GridSection maps `wifi-iface` sections directly.
 - The encryption list is limited to No Encryption, WPA2-PSK, WPA3-SAE and
   WPA2/WPA3 mixed mode. WPA1/WEP/enterprise EAP/OWE are not exposed; use the
   full wireless page for those.
