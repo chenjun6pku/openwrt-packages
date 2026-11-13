@@ -2,7 +2,6 @@
 	"luci-app-wireless": {
 		"description": "Grant access to simplified wireless configuration",
 		"read": {
-			"cgi-io": [ "exec" ],
 			"file": {
 				"/etc/iproute2/rt_tables": [ "read" ],
 				"/proc/sys/net/ipv6/conf/*/mtu": [ "read" ],
@@ -20,21 +19,13 @@
 				"network.device": [ "status" ],
 				"network.interface": [ "dump" ]
 			},
-			"uci": [ "dhcp", "firewall", "network", "system", "wireless" ]
+			"uci": [ "firewall", "network", "system", "wireless" ]
 		},
 		"write": {
-			"cgi-io": [ "exec" ],
-			"file": {
-				"/sbin/ifup": [ "exec" ],
-				"/sbin/ifdown": [ "exec" ],
-				"/sbin/wifi": [ "exec" ]
-			},
 			"ubus": {
-				"file": [ "exec" ],
-				"hostapd.*": [ "del_client" ],
-				"iwinfo": [ "scan" ]
+				"hostapd.*": [ "del_client" ]
 			},
-			"uci": [ "dhcp", "firewall", "network", "wireless" ]
+			"uci": [ "firewall", "network", "wireless" ]
 		}
 	}
 }

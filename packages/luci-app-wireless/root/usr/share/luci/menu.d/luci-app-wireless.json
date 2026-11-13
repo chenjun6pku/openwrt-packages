@@ -7,7 +7,8 @@
 			"path": "wireless/wireless"
 		},
 		"depends": {
-			"acl": [ "luci-app-wireless" ]
+			"acl": [ "luci-app-wireless" ],
+			"uci": { "wireless": { "@wifi-device": true } }
 		}
 	}
 }
