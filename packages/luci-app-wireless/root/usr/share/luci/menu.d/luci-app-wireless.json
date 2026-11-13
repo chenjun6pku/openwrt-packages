@@ -1,0 +1,13 @@
+{
+	"admin/services/wireless": {
+		"title": "Wi-Fi Quick Setup",
+		"order": 30,
+		"action": {
+			"type": "view",
+			"path": "wireless/wireless"
+		},
+		"depends": {
+			"acl": [ "luci-app-wireless" ]
+		}
+	}
+}

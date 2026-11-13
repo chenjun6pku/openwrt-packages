@@ -1,0 +1,40 @@
+{
+	"luci-app-wireless": {
+		"description": "Grant access to simplified wireless configuration",
+		"read": {
+			"cgi-io": [ "exec" ],
+			"file": {
+				"/etc/iproute2/rt_tables": [ "read" ],
+				"/proc/sys/net/ipv6/conf/*/mtu": [ "read" ],
+				"/proc/sys/net/ipv6/conf/*/hop_limit": [ "read" ],
+				"/usr/libexec/luci-peeraddr": [ "exec" ],
+				"/proc/sys/net/ipv[46]/conf/*": [ "read" ],
+				"/sys/class/net/*/brport/*": [ "read" ]
+			},
+			"ubus": {
+				"file": [ "exec" ],
+				"iwinfo": [ "assoclist", "countrylist", "freqlist", "txpowerlist" ],
+				"luci": [ "getSwconfigFeatures", "getSwconfigPortState" ],
+				"luci-rpc": [ "getBoardJSON", "getHostHints", "getNetworkDevices", "getWirelessDevices" ],
+				"network": [ "get_proto_handlers" ],
+				"network.device": [ "status" ],
+				"network.interface": [ "dump" ]
+			},
+			"uci": [ "dhcp", "firewall", "network", "system", "wireless" ]
+		},
+		"write": {
+			"cgi-io": [ "exec" ],
+			"file": {
+				"/sbin/ifup": [ "exec" ],
+				"/sbin/ifdown": [ "exec" ],
+				"/sbin/wifi": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "exec" ],
+				"hostapd.*": [ "del_client" ],
+				"iwinfo": [ "scan" ]
+			},
+			"uci": [ "dhcp", "firewall", "network", "wireless" ]
+		}
+	}
+}
